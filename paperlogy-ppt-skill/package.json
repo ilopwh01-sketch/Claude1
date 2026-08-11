@@ -1,0 +1,9 @@
+{
+  "name": "paperlogy-ppt-skill",
+  "version": "2.0.0",
+  "description": "PPT design system, canonical templates and code gates for pptxgenjs decks",
+  "private": true,
+  "dependencies": {
+    "pptxgenjs": "^4.0.1"
+  }
+}
