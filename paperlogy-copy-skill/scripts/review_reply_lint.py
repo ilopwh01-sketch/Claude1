@@ -17,6 +17,12 @@
 import re
 import sys
 
+# Windows cp949 콘솔에서 이모지/기호(📋⚠️🚫 등) print가 UnicodeEncodeError로 죽는 것 방지.
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except Exception:
+    pass
+
 # 인용부호 계열 전부 — Gmail 웹·한글 문서를 거치면 곧은 따옴표가 스마트 인용부호로
 # 자동 변환된다. `"` 하나만 보면 그 순간 게이트가 눈을 감는다).
 _QO = '"\u201C\u201F\u2018\u201B\u300C\u300E'   # 여는: " " ‟ ' ‛ 「 『

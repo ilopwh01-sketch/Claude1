@@ -11,7 +11,8 @@ unzip paperlogy-copy-skill.zip -d ~/.claude/skills/
 ```
 
 프로젝트 안에서만 쓰려면 `<프로젝트>/.claude/skills/` 아래에 둔다.
-필요한 것은 Python 3뿐이다. 추가 패키지는 없다.
+대부분의 게이트는 Python 3만 있으면 된다. 단, `coverage_ledger.py`(PPT "전부 고쳐" 검사용)는
+`python-pptx`가 추가로 필요하다: `pip install python-pptx`.
 
 ## 바로 써보기
 

@@ -54,12 +54,13 @@ ALLOW_EMOJI = {'\U0001F4C1', '\U0001F4AC'}
 emo = re.findall(r'[\U0001F000-\U0001FAFF☀-⛿✀-➿⌀-⏿⬀-⯿❢-❧]', T)
 bad = sorted(set(e for e in emo if e not in ALLOW_EMOJI))
 if bad: errors.append(f"이모지 {' '.join(bad)} → 📁💬만 허용, 나머지 제거")
-# 4. 자동 슬라이드번호
-if 'slideNumber' not in js: errors.append("s.slideNumber 자동 슬라이드번호 누락 (고정텍스트 번호 금지)")
+# 4. 자동 슬라이드번호 — 주석 제외(js_nc)로 본다. "// slideNumber 나중에 추가" 같은 코멘트만으로
+#    실제 호출이 없어도 통과되던 구멍(5·6도 동일 이유로 js_nc로 통일).
+if 'slideNumber' not in js_nc: errors.append("s.slideNumber 자동 슬라이드번호 누락 (고정텍스트 번호 금지)")
 # 5. fix-slidenum
-if 'fix-slidenum' not in js: errors.append("fix-slidenum.py 호출 누락 (writeFile().then())")
+if 'fix-slidenum' not in js_nc: errors.append("fix-slidenum.py 호출 누락 (writeFile().then())")
 # 6. 배경 이미지
-if 'Background_' not in js: errors.append("배경 이미지(Background_paperlogy) addImage 누락")
+if 'Background_' not in js_nc: errors.append("배경 이미지(Background_paperlogy) addImage 누락")
 # 6b. 클로드 프로젝트 색·배경 전면 금지 "클로드 프로젝트 끝났어. 클로드 색깔 하지마" — 우리 원칙=클라인 블루)
 #   코랄만 잡던 구멍과 본문 HTML 미검사 구멍을 함께 막는다 → 폐기색 전체 블랙리스트 + build.js·본문HTML 양쪽 스캔.
 CLAUDE_DEAD = {'D97757','292524','6B6862','F4F2EE','8A8378','DAD6CE','E7E2DE','F4EEE8',
@@ -97,7 +98,9 @@ if n_chart:
 # 8b. 폐기된 옛 블루 팔레트
 OLD_BLUE = {'4F6EF1','0014D3','7E94F5','A8B7F8','DDE3FB','F8F9FF',  # 옛 형광블루 ( 폐기)
             '1C6DD0','0B2E4F','5B9BD5','A9C9E8','DBE9F6','F1F6FB'}  # 옛 딥네이비/메디컬블루 ( 폐기)
-used_old = sorted(h for h in set(x.upper() for x in re.findall(r'["\'#]([0-9A-Fa-f]{6})["\']', js)) if h in OLD_BLUE)
+# CLAUDE_DEAD(6b)처럼 닫는 따옴표를 요구하지 않는다("background:#4F6EF1;"처럼 뒤에 문자가
+# 붙는 CSS 값은 놓친다) 및 build.js뿐 아니라 본문HTML(_scan)까지 같이 본다 — 6b와 같은 구멍.
+used_old = sorted({h.upper() for _src, _txt in _scan for h in re.findall(r'["\'#]([0-9A-Fa-f]{6})', _txt)} & OLD_BLUE)
 if used_old:
     errors.append(f"폐기된 옛 블루 {', '.join(used_old)} — 표준은 클라인 블루(brand 002FA7 / brandDeep 001C64 / accent FF7A00).")
 # 8f. 강조 오렌지 FF7A00 = 비문자 요소 전용(탭·바·면·밑줄) — 글자·숫자엔 크기 무관 금지
@@ -300,7 +303,8 @@ NEUTRAL = {   # (클로드 웜톤 8A8378·DAD6CE·E7E2DE 제거 —  클로드 �
            'B7BDC8','D5DAE3','F0F0F0','404040','45515E','8E8E93','5F5F5F','F2F3F5',
            'DDE1E8','EEF0F4','F6F7FB','EEEEEE','DCE3EC','ECEEF2','D0D5DD','8E8E93'}
 ALLOWED = CLAUDE4 | BLUE | NEUTRAL
-hexes = set(h.upper() for h in re.findall(r'["\'#]([0-9A-Fa-f]{6})["\']', js))
+# 6b/8b와 같은 이유로 닫는 따옴표를 요구하지 않고, build.js뿐 아니라 본문HTML(_scan)도 같이 본다.
+hexes = {h.upper() for _src, _txt in _scan for h in re.findall(r'["\'#]([0-9A-Fa-f]{6})', _txt)}
 extra = sorted(h for h in hexes if h not in ALLOWED)
 def _is_blue_tint(h):   # 파란 계열(블루 채널 확연 우세) = 즉석 지어낸 블루 틴트
     r, g, b = int(h[0:2],16), int(h[2:4],16), int(h[4:6],16)

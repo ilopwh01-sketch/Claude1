@@ -546,8 +546,7 @@ matplotlib·PIL로 렌더한 PNG를 카드에 넣을 경우, 통짜 슬라이드
 | `AXIS_GREY` / `GRID_GREY` | 문자열 | 차트 축·grid 색 |
 | `CHART_CLEAN` | 객체 | 모든 차트에 스프레드하는 공통 옵션 |
 | `sContainer()` | `() => shadowObj` | 카드 그림자 객체를 **매 호출마다 새로** 만든다 |
-| `SKILL_DIR` | 상수 | 번들 루트. `PAPERLOGY_SKILL_DIR` 환경변수 > 상위 폴더 > 현재 폴더 순으로 자동 탐색 |
-| `BG_PATH` | 상수 | `SKILL_DIR/assets/Background_paperlogy.jpg` |
+| `BG_PATH` | 상수 | `path.join(__dirname, "assets", "Background_paperlogy.jpg")` — 번들을 통째로 복사해 쓰는 게 전제라 위치 재탐색은 하지 않는다 |
 | `addBackground(s)` | `(slide)` | 배경 이미지를 슬라이드 전면에 깐다. 모든 슬라이드 첫 줄 |
 | `addHeader(s, chapter, headline, subtitle)` | `(slide, string, string, string?)` | 챕터 라벨 + 헤드라인(마침표 자동 부착) + 서브타이틀. subtitle은 생략 가능 |
 | `box(s, x, y, w, h, o)` | `(slide, num, num, num, num, opts?)` | 흰 카드. `o.fill` 색 교체, `o.r` 라운드 교체, `o.shadow === false`면 그림자 제거 |
@@ -559,16 +558,19 @@ matplotlib·PIL로 렌더한 PNG를 카드에 넣을 경우, 통짜 슬라이드
 ```javascript
 pres.writeFile({ fileName: "v01-example.pptx" })
   .then((fn) => {
-    const _cp = require("child_process");
-    const PY = process.env.PYTHON || "python3";
-    const SC = _path.join(SKILL_DIR, "scripts");
-    _cp.execSync(`${PY} "${_path.join(SC, "fix-slidenum.py")}" "${fn}"`, { stdio: "inherit" });
-    try { _cp.execSync(`${PY} "${_path.join(SC, "ppt_lint.py")}" "${__filename}" "${fn}"`, { stdio: "inherit" }); }
+    const _cp = require("child_process"), _p = require("path");
+    const PY = process.env.PYTHON || "python3";   // 파이썬 실행 파일 이름이 다르면 이 환경변수로
+    _cp.execSync(`${PY} "${_p.join(__dirname, "fix-slidenum.py")}" "${fn}"`, { stdio: "inherit" });
+    try { _cp.execSync(`${PY} "${_p.join(__dirname, "ppt_lint.py")}" "${__filename}" "${fn}"`, { stdio: "inherit" }); }
     catch (e) { console.log("ppt_lint ERROR: 위 목록을 0으로 고쳐 다시 빌드할 것."); process.exit(1); }
     console.log(`빌드 완료: ${fn}`);
   })
   .catch((err) => { console.error("빌드 실패:", err); process.exit(1); });
 ```
+
+이 빌드 스크립트(build-vNN-주제.js)는 `templates/`(정본 복사본) 또는 번들 루트 어느 쪽에 둬도
+`__dirname`이 자기 위치를 정확히 가리키므로 그대로 동작한다 — 단, `fix-slidenum.py`·`ppt_lint.py`가
+**같은 폴더에 있어야** 한다(번들을 통째로 복사해서 쓸 것. 흩어서 쓰는 건 지원하지 않는다).
 
 파일명은 **버전 번호를 맨 앞에** 둔다. 산출물 `vNN-주제.pptx`, 스크립트 `build-vNN-주제.js`. 정렬이 편해진다.
 

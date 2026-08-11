@@ -116,8 +116,8 @@ python3 scripts/writing_lint.py manuscript.txt
 # 검토 회신 (칭찬한 문장을 수정본에서 갈아치웠는지)
 python3 scripts/review_reply_lint.py reply.txt
 
-# "전부 고쳐" 지시를 받았을 때
-python3 scripts/coverage_ledger.py target.js
+# "전부 고쳐" 지시를 받았을 때 (PPT 파일만 지원)
+python3 scripts/coverage_ledger.py target.pptx
 
 # 좋은 문장 아카이브에서 구조 찾기
 ```

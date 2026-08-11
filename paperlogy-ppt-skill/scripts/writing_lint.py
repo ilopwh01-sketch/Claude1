@@ -16,6 +16,11 @@ import sys
 import urllib.parse
 import urllib.request
 
+# Windows cp949 콘솔에서 이모지/기호(❌⚠️✅ 등) print가 UnicodeEncodeError로 죽는 것 방지.
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except Exception:
+    pass
 
 parser = argparse.ArgumentParser(description="페이퍼로지 글쓰기 린터")
 parser.add_argument("source", nargs="?", default="-", help="검사할 UTF-8 텍스트 파일 또는 -")
@@ -29,7 +34,7 @@ else:
 errors, warns = [], []
 
 # ───────── ERROR (명확 금지) ─────────
-if re.search(r'솔직(?:히|하게|한)', text): errors.append('"솔직히" 류 → 강조는 "정확히/상세히/짚어서"')
+if re.search(r'솔직(?:히|하게|한|함)', text): errors.append('"솔직히" 류 → 강조는 "정확히/상세히/짚어서"')
 if re.search(r'(?:솔직|정직|정확)(?:하게|히)\s*(?:말|짚|얘기|보면|얘긴)', text): errors.append('"솔직하게/정직하게/정확하게 말하겠습니다·말하면·짚으면" 류 강조 도입부 → 쓸데없는 군말, 도입부 없이 바로 본론( "정확히 말하면도 하지마")')
 if '—' in text: errors.append('줄표 em dash(—) → 콜론(:)·쉼표(,)·물결(~)')
 if '–' in text: errors.append('줄표 en dash(–) → 물결(~)·콜론')
@@ -39,6 +44,10 @@ if re.search(r'에 다름 아니', text): errors.append('"~에 다름 아니다"
 if re.search(r'지 않으면 안 [되된됩됐]', text): errors.append('"~지 않으면 안 된다" → "~해야 한다" (일본어투 번역체)')
 if re.search(r'아무리 강조해도 지나치', text): errors.append('"아무리 강조해도 지나치지 않다" → 우리말로 바로 강조 (번역체)')
 if '갈림길' in text: errors.append('"갈림길" 수사 금지 — 번역체로 읽힌다. 선택 상황은 입말로 풀 것("~하지 마세요, ~하세요")')
+# COPYWRITING.md §1 "쓰지 말 것"이 명시적으로 금지어로 지정한 번역체 3종 — WARN이 아니라 ERROR다.
+if re.search(r'가장[^.\n]{0,24}중 (?:의 )?하나', text): errors.append('"가장 ~한 것 중 하나"(one of the most) → "제일 ~한 게" (번역체, §1 금지)')
+if re.search(r'[을를] 가지고 있', text): errors.append('"~을 가지고 있다"(have 직역) → "~이 있다" (번역체, §1 금지)')
+if re.search(r'에 있어서?[\s,]', text): errors.append('"~에 있어(서)" → "~에서/~할 때" (번역체, §1 금지, 단 "집에 있어서" 같은 진짜 있다 동사는 오탐)')
 
 # ───────── WARN (코드 근사 → 눈 확인) ─────────
 # 1. 대조말투 (writing-no-ai-antithesis)
@@ -67,23 +76,23 @@ for e in ends:
     prev = e
 if maxrun >= 3:
     warns.append(f'같은 종결어미 {maxrun}연속 — 단조로움. 종결 다양화(~죠/~더라고요/의문형/명사 종결)')
-# 5. 군더더기 부사
-for w in ['근본적으로', '기본적으로', '사실은']:
-    if w in text: warns.append(f'군더더기 부사 "{w}" — 빼는 게 깔끔'); break
-# 6. 이모지 (강의 본문엔 절제 / 영상 스크립트 지시문은 예외)
-emo = re.findall(r'[\U0001F000-\U0001FAFF☀-⛿✀-➿]', text)
+# 5. 군더더기 부사 — 여러 개 섞이면 전부 보여준다(하나 찾고 멈추면 나머지가 묻힌다).
+_hedges = [w for w in ['근본적으로', '기본적으로', '사실은'] if w in text]
+if _hedges:
+    warns.append(f'군더더기 부사 {_hedges} — 빼는 게 깔끔')
+# 6. 이모지 (강의 본문엔 절제 / 영상 스크립트 지시문은 예외) — ✓·➡ 같은 불릿/화살표 기호는 제외.
+_EMOJI_SAFE = set("✓✔✗✘➡➔→←↑↓·•‣◦")
+emo = [e for e in re.findall(r'[\U0001F000-\U0001FAFF☀-⛿✀-➿]', text) if e not in _EMOJI_SAFE]
 if emo:
     warns.append(f'이모지 {" ".join(sorted(set(emo)))} — 강의 본문엔 절제 (영상 스크립트 지시문은 예외)')
 # 8. 번역체 의심 (writing-no-translationese — 오탐 가능 패턴은 WARN, 확정 패턴은 위 ERROR)
 trans = []
-if re.search(r'가장[^.\n]{0,24}중 (?:의 )?하나', text): trans.append('"가장 ~한 것 중 하나"(one of the most) → "제일 ~한 게"')
-if re.search(r'[을를] 가지고 있', text): trans.append('"~을 가지고 있다"(have 직역) → "~이 있다"')
 if re.search(r'에 의해|에 의하여', text): trans.append('"~에 의해"(수동태) → 능동문으로')
-if re.search(r'에 있어서?[\s,]', text): trans.append('"~에 있어(서)" → "~에서/~할 때" (단 "집에 있어서" 같은 진짜 있다 동사는 오탐)')
 if re.search(r'할 필요가 있', text): trans.append('"~할 필요가 있다" → "~해야 한다/~하면 된다"')
 if re.search(r'것이 가능하', text): trans.append('"~하는 것이 가능하다" → "~할 수 있다"')
 if '에도 불구하고' in text: trans.append('"~에도 불구하고"(despite) → "~인데도/~지만"')
 if '그녀' in text: trans.append('"그녀"(she 직역) → 이름·직함으로')
+# 짧은 카피(brandlogy_lint)는 3회부터, 장문인 여기는 4회부터 — 의도된 차이(카피 vs 장문)다.
 ndaehae = len(re.findall(r'에 대해|에 대한', text))
 if ndaehae >= 4: trans.append(f'"에 대해/에 대한" {ndaehae}회(about 남용) → 조사로 풀기("~를", "~ 이야기")')
 if re.search(r'(무엇이든|뭐든|누구든|어디든)[^.\n]{0,10}(?:힙니다|힌다|혀요|립니다|린다|려요|깁니다|긴다|겨요|어집니다|어진다|어져요)', text):

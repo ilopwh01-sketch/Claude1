@@ -476,11 +476,12 @@ addBottomStrip(s3, 2, "Source: 스킬 예시용 가상 데이터 / 두 채널 �
 pres.writeFile({ fileName: "샘플-발표자료-v01.pptx" })
   .then((fn) => {
     const _cp = require("child_process"), _p = require("path");
-    _cp.execSync(`python3 "${_p.join(__dirname, "fix-slidenum.py")}" "${fn}"`, { stdio: "inherit" });
+    const PY = process.env.PYTHON || "python3";   // README §4: 파이썬 실행 파일 이름이 다르면 이 환경변수로
+    _cp.execSync(`${PY} "${_p.join(__dirname, "fix-slidenum.py")}" "${fn}"`, { stdio: "inherit" });
     // 코드 강제: 빌드 끝에 ppt_lint 자동 검사 (줄표·이모지·원형숫자·자동번호·배경). ERROR 0 전엔 완료 보고 금지.
     //)를 삼키고 ' 빌드 완료'를 찍어, node 직접 빌드 시
     //  게이트가 무력화됐다. → ERROR면 process.exit(1)로 실제로 빌드를 실패시킨다(완료 보고 차단).
-    try { _cp.execSync(`python3 "${_p.join(__dirname, "ppt_lint.py")}" "${__filename}" "${fn}"`, { stdio: "inherit" }); }
+    try { _cp.execSync(`${PY} "${_p.join(__dirname, "ppt_lint.py")}" "${__filename}" "${fn}"`, { stdio: "inherit" }); }
     catch (e) { console.log(" ppt_lint ERROR : 위 목록을 0으로 고쳐 다시 빌드할 것. ERROR 있는 채로 '완료' 보고 금지."); process.exit(1); }
     console.log(` 빌드 완료: ${fn}`);
   })

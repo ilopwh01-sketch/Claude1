@@ -22,7 +22,7 @@ promote_ppt.py — "합격/확정" 판정을 받은 PPT만 진열장으로 승�
     이름·위치가 다르면 --build-source로 명시한다. 없으면 승격 중단(fail-closed).
   - 유일한 예외 = PowerPoint로 직접 손수정한 파일(--roji-edited). 사람 손이 최종 권위다.
 """
-import sys, os, shutil, hashlib, subprocess
+import re, sys, os, shutil, hashlib, subprocess, tempfile
 from pathlib import Path
 from typing import Optional
 
@@ -68,7 +68,28 @@ def lint_gate(src: Path, roji_edited: bool, build_source: Optional[Path] = None)
         print(r.stdout[-2000:], file=sys.stderr)
         print(f"❌ 승격 중단 — ppt_lint ERROR. 0으로 고쳐 다시 빌드 후 승격하라.", file=sys.stderr)
         sys.exit(1)
-    print(f"✅ 승격 전 lint 통과 (ppt_lint ERROR 0, {js.name})")
+    # build_ppt.py의 정상 경로([1/5])는 brandlogy_lint도 강제한다. node build.js를 직접 돌려
+    # 그 단계를 건너뛴 산출물이 승격만 이 함수로 들어오면 카피 금지어가 그대로 진열될 수 있어
+    # 여기서도 같은 카피 게이트를 건다(관문 단일화 원칙 — 이 파일 자체가 그 원칙을 표방한다).
+    _copies = re.findall(r'"([^"]*[가-힣][^"]*)"|\'([^\']*[가-힣][^\']*)\'|`([^`]*[가-힣][^`]*)`', _body)
+    _copy_text = "\n".join(x for tup in _copies for x in tup if x)
+    if _copy_text.strip():
+        with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False, encoding="utf-8") as _f:
+            _f.write(_copy_text)
+            _copy_tmp = _f.name
+        try:
+            br = subprocess.run([sys.executable, str(here / "brandlogy_lint.py"), _copy_tmp],
+                                capture_output=True, text=True)
+        finally:
+            try:
+                os.remove(_copy_tmp)
+            except OSError:
+                pass
+        if br.returncode != 0:
+            print(br.stdout[-2000:], file=sys.stderr)
+            print(f"❌ 승격 중단 — brandlogy_lint ERROR(카피 금지어). 0으로 고쳐 다시 빌드 후 승격하라.", file=sys.stderr)
+            sys.exit(1)
+    print(f"✅ 승격 전 lint 통과 (ppt_lint + brandlogy_lint ERROR 0, {js.name})")
 
 def sha256(p: Path) -> str:
     h = hashlib.sha256()

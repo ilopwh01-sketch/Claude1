@@ -18,6 +18,7 @@ mask_excel.py — 엑셀 개인정보 자동 마스킹 (AI에 넣기 전 1회 �
     (경고만 찍고 파일을 남기면 그건 게이트가 아니라 경고판이다)
   · 이름은 정규식으로 못 잡는다 → 치환표의 원본값을 결과 전 셀에서 역검색한다.
 """
+import os
 import re
 import sys
 import unicodedata
@@ -30,18 +31,35 @@ try:
 except ImportError:
     sys.exit("openpyxl이 필요합니다:  pip3 install openpyxl")
 
+# Windows cp949 콘솔에서 이모지(✅🚨⚠️ 등) print가 UnicodeEncodeError로 죽는 것 방지.
+# 이 크래시는 out.save() 이후(마스킹 파일은 이미 디스크에 있음)에 나서, run-windows.bat이
+# "파일을 만들지 않았다"고 잘못 안내하게 만들 수 있다 — 상태 출력 실패가 결과를 왜곡하면 안 된다.
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except Exception:
+    pass
+
 MAP_VAULT = Path.home() / "개인정보_매핑표_금고"
 
 # ── 값 패턴 (컬럼 타입 판정 + 잔여 검사 양쪽에 쓴다) ──────────────
 P_EMAIL = re.compile(r"[\w.+-]+@[\w-]+\.[\w.]{2,}")
 P_MOBILE = re.compile(r"01[016789][-\s.]?\d{3,4}[-\s.]?\d{4}")
-P_LANDLINE = re.compile(r"(?<!\d)0(?:2|[3-6]\d)[-\s.]?\d{3,4}[-\s.]?\d{4}(?!\d)")
-P_RRN = re.compile(r"(?<!\d)\d{6}[-\s]?[1-4]\d{6}(?!\d)")
+# 070(인터넷전화)·080(수신자부담)도 유선전화로 흔히 쓰인다(특히 CS/콜센터 번호).
+P_LANDLINE = re.compile(r"(?<!\d)0(?:2|[3-6]\d|70|80)[-\s.]?\d{3,4}[-\s.]?\d{4}(?!\d)")
+# 성별코드 5~8(외국인) 포함. 내국인 1~4만 잡으면 외국인 주민번호가 그대로 샌다.
+P_RRN = re.compile(r"(?<!\d)\d{6}[-\s]?[1-8]\d{6}(?!\d)")
 P_CARD = re.compile(r"(?<!\d)\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}(?!\d)")
-P_ACCOUNT = re.compile(r"(?<!\d)\d{2,6}-\d{2,6}-\d{2,8}(?!\d)")
+# 다른 패턴들처럼 구분자를 선택으로 둔다. 엑셀에서 숫자로 저장되면 하이픈이 통째로 없어진다.
+P_ACCOUNT = re.compile(r"(?<!\d)\d{2,6}[-\s]?\d{2,6}[-\s]?\d{2,8}(?!\d)")
 P_KNAME = re.compile(r"^[가-힣]{2,4}$")
 P_KFULLNAME = None   # SURNAME 정의 후 아래에서 채운다
-P_DATEISH = re.compile(r"(19|20)\d{2}[-./년\s]?\s?\d{1,2}")
+# 19xx/20xx가 붙은 형태 외에, "80.05.12" 2자리연도나 "800512" 6자리 YYMMDD도 잡는다
+# (컬럼명이 생년월일 계열일 때만 쓰이는 패턴이라 오탐 범위는 그 컬럼 안으로 한정된다).
+P_DATEISH = re.compile(
+    r"(?:(?:19|20)\d{2}[-./년\s]?\s?\d{1,2})"
+    r"|(?:(?<!\d)\d{2}[-./]\d{1,2}[-./]\d{1,2}(?!\d))"
+    r"|(?:(?<!\d)\d{6}(?!\d))"
+)
 
 # 문장 속 제3자 이름 — 치환표 역검색으로는 원리적으로 못 잡는 자리.
 # "김철수 고객님", "이영희씨", "최민수 과장"은 잡고 "다음 고객님께"는 안 잡아야 한다.
@@ -166,7 +184,10 @@ def sniff(header, values):
         return "keep"
 
     # 엑셀이 010의 앞 0을 없애 숫자 1012345678로 저장해도 컬럼명으로 막는다.
-    if compact_header in PHONE_HEADERS or compact_header in EMAIL_HEADERS:
+    # "고객전화번호"·"본인연락처"처럼 다른 단어가 붙어 완전일치가 안 되는 헤더도
+    # 잡아야 하므로 부분 문자열로 본다(대상 키워드가 짧은 단어 하나가 아니라
+    # "전화번호"·"연락처"류의 특정 어휘라 오탐 위험이 낮다).
+    if any(kw in compact_header for kw in PHONE_HEADERS) or any(kw in compact_header for kw in EMAIL_HEADERS):
         return "id"
 
     sample = vals[:200]
@@ -191,7 +212,10 @@ def sniff(header, values):
         return "drop"
 
     # 컬럼명 신호 + 값 형태가 둘 다 맞을 때만 (Product Name 오탐 차단)
-    if tk & TOK_NAME:
+    # "고객성명"·"수신자명"처럼 붙어서 토큰 완전일치가 안 되는 헤더도 부분 문자열로 잡는다.
+    # "성" 1글자는 제외(거의 모든 한글 단어에 섞여 있어 오탐 폭증) — 그 외엔 아래 looks_name
+    # 값-형태 검사가 한 번 더 걸러주므로(80% 미만이면 keep_warn) 관대하게 잡아도 안전하다.
+    if (tk & TOK_NAME) or any(kw in compact_header for kw in TOK_NAME if len(kw) >= 2):
         if compact_header in NONPERSON_NAME_HEADERS:
             return "keep"
         # '머그'·'노트'도 한글 2~4자라 그것만으로는 이름과 못 가른다.
@@ -251,8 +275,13 @@ def addr_cut(v):
 def money_band(v):
     if v is None or str(v).strip() == "":
         return ""
+    s = str(v)
+    # "1,000,000~2,000,000" 같은 범위값은 콤마·물결을 다 지우면 두 숫자가 이어붙어
+    # 자릿수가 폭증한 가짜 단일 금액이 된다("5000만원 이상"으로 잘못 분류) → 먼저 걸러낸다.
+    if re.search(r"[~\-–—]\s*\d", re.sub(r"^-", "", s.strip())) and len(re.findall(r"\d[\d,]*", s)) >= 2:
+        return "확인불가"
     try:
-        n = float(re.sub(r"[^\d.-]", "", str(v)))
+        n = float(re.sub(r"[^\d.-]", "", s))
     except ValueError:
         return "확인불가"
     if n < 0:
@@ -261,6 +290,27 @@ def money_band(v):
         if n < cap:
             return f"~{cap // 10_000}만원"
     return "5000만원 이상"
+
+
+def _restrict_to_owner(path):
+    """소유자만 접근 가능하게 잠근다. chmod의 0o700/0o600은 Windows NTFS에선 아무 효과가
+    없으므로(POSIX 비트 자체가 없다) 거기선 icacls로 상속을 끊고 현재 사용자만 부여한다."""
+    if os.name == "nt":
+        try:
+            import subprocess
+            user = os.environ.get("USERNAME", "")
+            if user:
+                subprocess.run(
+                    ["icacls", str(path), "/inheritance:r", "/grant:r", f"{user}:F"],
+                    capture_output=True, check=False
+                )
+        except Exception:
+            pass
+    else:
+        try:
+            path.chmod(0o700 if path.is_dir() else 0o600)
+        except OSError:
+            pass
 
 
 def main():
@@ -381,6 +431,14 @@ def main():
     leaks = Counter()
     samples = {}
     suspect_hits = {}
+    # 원본값 재등장 검사: 셀마다 all_originals를 파이썬 루프로 훑으면
+    # (셀 수 × 원본값 수)라 대형 명단에서 이 검사가 전체 실행시간을 지배한다.
+    # 하나의 정규식(치환된 값들의 alternation)으로 합쳐 셀당 1회 검색으로 줄인다.
+    orig_pat = None
+    if all_originals:
+        orig_pat = re.compile(
+            "|".join(re.escape(o) for o in sorted(all_originals, key=len, reverse=True))
+        )
 
     def flag(label, text):
         leaks[label] += 1
@@ -411,10 +469,10 @@ def main():
                 for sus in suspects(s):
                     suspect_hits.setdefault(sus, str(c)[:45])
                 # 치환한 원본값이 다른 칸(비고·메모 등)에 그대로 살아 있는가
-                for orig in all_originals:
-                    if orig in s and s != orig:
+                if orig_pat is not None:
+                    m = orig_pat.search(s)
+                    if m and m.group(0) != s:
                         flag("치환한 원본값 재등장", s)
-                        break
 
     print(f"\n원본:   {src.name}")
     for title, dropped, n_id, n_row in report:
@@ -449,16 +507,10 @@ def main():
     map_path = None
     if keep_mapping and mapping.sheetnames:
         MAP_VAULT.mkdir(mode=0o700, exist_ok=True)
-        try:
-            MAP_VAULT.chmod(0o700)
-        except OSError:
-            pass
+        _restrict_to_owner(MAP_VAULT)
         map_path = map_candidate
         mapping.save(map_path)
-        try:
-            map_path.chmod(0o600)
-        except OSError:
-            pass
+        _restrict_to_owner(map_path)
 
     print("\n✅ 패턴 검사 통과 — 이메일·휴대전화·유선전화·주민번호·카드번호·계좌번호·치환한 원본값 0건")
     print(f"\n마스킹: {masked_path}")

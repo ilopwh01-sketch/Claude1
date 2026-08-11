@@ -8,9 +8,13 @@
 # 빌드 JS가 ppt_lint 호출을 깜빡해도 이 래퍼가 강제로 검사하므로 누락 불가.
 #
 # 사용: python3 scripts/build_ppt.py <build.js>
-import sys, subprocess, re, os, unicodedata, glob, shutil, uuid
+import sys, subprocess, re, os, unicodedata, glob, shutil, uuid, tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+# /tmp는 Windows엔 없다(C:\tmp가 없으면 [1/5]에서 바로 죽는다) — OS별 임시 폴더로 통일.
+# python3도 Windows엔 보통 없다(그냥 "python") — README가 문서화한 PYTHON 환경변수를 실제로 반영한다.
+TMP = tempfile.gettempdir()
+PY = os.environ.get("PYTHON", "python3" if shutil.which("python3") else "python")
 # --fast = 반복 수정 중 [5/5] 실제 PowerPoint 실렌더 스킵(매 빌드 PowerPoint 뜨는 번거로움 회피).
 #   디폴트는 실렌더 ON — 최종 빌드에서 깜빡 빼먹지 않게(빼먹으면 그게 '두 번 지적'의 자리). 최종은 --fast 없이.
 FAST = "--fast" in sys.argv[1:]
@@ -58,8 +62,9 @@ print(f"━━ [1/5] brandlogy_lint (슬라이드 카피 — 카피 담당이 �
 _src = open(js, encoding="utf-8").read()
 _copies = re.findall(r'"([^"]*[가-힣][^"]*)"|\'([^\']*[가-힣][^\']*)\'|`([^`]*[가-힣][^`]*)`', _src)
 _copy_text = "\n".join(x for tup in _copies for x in tup if x)
-open("/tmp/_ppt_copy.txt", "w", encoding="utf-8").write(_copy_text)
-_bl = subprocess.run(["python3", os.path.join(HERE, "brandlogy_lint.py"), "/tmp/_ppt_copy.txt"])
+_copy_tmp = os.path.join(TMP, "_ppt_copy.txt")
+open(_copy_tmp, "w", encoding="utf-8").write(_copy_text)
+_bl = subprocess.run([PY, os.path.join(HERE, "brandlogy_lint.py"), _copy_tmp])
 if _bl.returncode != 0:
     print("\n❌ PPT 미완성 — 슬라이드 카피가 brandlogy_lint ERROR.")
     print("   🚨 카피는 제작자 즉흥 작성 금지. 카피 담당이 먼저 쓰고(보이스·So what·메타포 없이 한 번에 이해),")
@@ -84,21 +89,27 @@ if not os.path.isfile(pptx):
     print(f"❌ 빌드 출력 경로의 pptx가 실제로 없음: {pptx}"); sys.exit(1)
 
 print(f"\n━━ [3/5] ppt_lint (코드 강제 검사) ━━")
-lint = subprocess.run(["python3", os.path.join(HERE, "ppt_lint.py"), js, pptx])
+lint = subprocess.run([PY, os.path.join(HERE, "ppt_lint.py"), js, pptx])
 if lint.returncode != 0:
     print("\n❌ PPT 미완성 — ppt_lint ERROR. 0으로 고쳐 다시 빌드하기 전엔 '완료' 보고 금지. (PNG·open 단계 차단)")
     sys.exit(1)
 
 print(f"\n━━ [4/5] soffice PNG QA 생성 (레이아웃·밀도·정렬용 — 카드 글자 위치 정본은 [5/5] 실렌더) ━━")
 base = os.path.splitext(os.path.basename(pptx))[0]
-subprocess.run(["soffice", "--headless", "--convert-to", "pdf", "--outdir", "/tmp", pptx],
-               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-pdf = f"/tmp/{base}.pdf"
-if os.path.exists(pdf):
-    subprocess.run(["pdftoppm", "-png", "-r", "130", pdf, f"/tmp/{base}_qa"],
+try:
+    subprocess.run(["soffice", "--headless", "--convert-to", "pdf", "--outdir", TMP, pptx],
                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    pngs = sorted([f for f in os.listdir("/tmp") if f.startswith(f"{base}_qa")])
-    print(f"✅ ppt_lint 통과 + PNG {len(pngs)}장 생성: /tmp/{base}_qa-*.png")
+except FileNotFoundError:
+    print("   ⚠️ soffice(LibreOffice) 없음 — PNG QA 스킵. pptx로 직접 열어 확인할 것.")
+pdf = os.path.join(TMP, f"{base}.pdf")
+if os.path.exists(pdf):
+    try:
+        subprocess.run(["pdftoppm", "-png", "-r", "130", pdf, os.path.join(TMP, f"{base}_qa")],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except FileNotFoundError:
+        print("   ⚠️ pdftoppm 없음 — PNG 변환 스킵.")
+    pngs = sorted([f for f in os.listdir(TMP) if f.startswith(f"{base}_qa")])
+    print(f"✅ ppt_lint 통과 + PNG {len(pngs)}장 생성: {os.path.join(TMP, base + '_qa-*.png')}")
     print("   → 다음: PNG를 눈으로 확인(겹침·정렬·밀도·흰박스안흰박스·색 계열색), 통과하면 open으로 띄운다.")
     print("   📋 카피 자문: 이 슬라이드 글자(헤드라인·서브·칩·하단 띠)를 카피 보이스로 '먼저' 썼는가? 제작자 즉흥 X (team-brandlogy-writing-dept)")
     print("   📋 하단 띠 라벨 자문: 'SO WHAT' 고정이 아니라 슬라이드 성격에 맞게 가변했는가? (핵심·한 줄 정리·이번 강 한마디 등, 디자인 형식만 유지하고 말은 가변)")
@@ -112,14 +123,14 @@ if os.path.exists(pdf):
     if _n_img >= 2:   # 배경 + 최소 1개 외부 이미지
         try:
             from PIL import Image as _PILImage
-            _qa0 = f"/tmp/{base}_qa-1.png"
+            _qa0 = os.path.join(TMP, f"{base}_qa-1.png")
             if os.path.exists(_qa0):
                 _im = _PILImage.open(_qa0); _W, _H = _im.size
                 _cells = {"좌상": (0, 0, 0.52, 0.58), "우상": (0.48, 0, 1.0, 0.58),
                           "좌하": (0, 0.42, 0.52, 1.0), "우하": (0.48, 0.42, 1.0, 1.0)}
                 _saved = []
                 for _nm, (x0, y0, x1, y1) in _cells.items():
-                    _p = f"/tmp/{base}_crop_{_nm}.png"
+                    _p = os.path.join(TMP, f"{base}_crop_{_nm}.png")
                     _im.crop((int(_W*x0), int(_H*y0), int(_W*x1), int(_H*y1))).save(_p)
                     _saved.append(_p)
                 print(f"   🔍 외부 이미지 {_n_img-1}개 포함 → 통짜 PNG만 보면 라벨↔이미지 겹침을 놓친다(끝노드에서 터진 사고).")
@@ -141,7 +152,7 @@ print(f"\n━━ [5/5] 실제 PowerPoint 실렌더 QA (카드 글자·겹침 정
 if FAST:
     print("   ⏭️  --fast: 실렌더 스킵(반복 수정 중). 🚨 넘기기 전 최종 빌드는 반드시 --fast 없이 돌려 실렌더로 카드 글자를 확인할 것.")
 else:
-    real_pdf = f"/tmp/{base}_realppt.pdf"
+    real_pdf = os.path.join(TMP, f"{base}_realppt.pdf")
     try:
         if os.path.exists(real_pdf): os.remove(real_pdf)
     except Exception: pass
@@ -152,7 +163,7 @@ else:
     #   해법: 원본을 열지 않는다. 고유 이름의 렌더 전용 임시 복사본만 열고, 그 이름만 닫는다.
     #         → PowerPoint에 이미 열려 있는 어떤 문서와도 이름이 겹칠 수 없다(선제 close 전면 제거).
     # UUID: PID는 재사용되므로 오래 남은 임시 문서와의 이론적 충돌까지 제거(외부 검증)
-    _rtmp = f"/tmp/__render_{uuid.uuid4().hex[:12]}_{base}.pptx"
+    _rtmp = os.path.join(TMP, f"__render_{uuid.uuid4().hex[:12]}_{base}.pptx")
     try:
         shutil.copy2(pptx, _rtmp)
     except Exception as _ce:
@@ -176,11 +187,14 @@ else:
         _rr = None
         print(f"   ⚠️ osascript 실행 실패: {_re}")
     if os.path.exists(real_pdf) and os.path.getsize(real_pdf) > 10000:
-        subprocess.run(["pdftoppm", "-png", "-r", "130", real_pdf, f"/tmp/{base}_real"],
-                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        _real_pngs = sorted(f for f in os.listdir("/tmp") if f.startswith(f"{base}_real") and f.endswith(".png"))
+        try:
+            subprocess.run(["pdftoppm", "-png", "-r", "130", real_pdf, os.path.join(TMP, f"{base}_real")],
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except FileNotFoundError:
+            print("   ⚠️ pdftoppm 없음 — 실렌더 PNG 변환 스킵.")
+        _real_pngs = sorted(f for f in os.listdir(TMP) if f.startswith(f"{base}_real") and f.endswith(".png"))
         if _real_pngs:
-            print(f"   🎯 실제 PowerPoint 실렌더 PNG {len(_real_pngs)}장: /tmp/{base}_real-*.png")
+            print(f"   🎯 실제 PowerPoint 실렌더 PNG {len(_real_pngs)}장: {os.path.join(TMP, base + '_real-*.png')}")
             print(f"      → 카드 글자(addText)·겹침·잘림은 soffice PNG가 아니라 이 PowerPoint 실렌더로 '눈으로' 최종 확인한다.")
             print(f"      → 확인 전 '완료' 보고 금지. (외부 삽입 이미지가 있으면 실렌더 PNG도 단독 Read로 밀집부 확인)")
         else:

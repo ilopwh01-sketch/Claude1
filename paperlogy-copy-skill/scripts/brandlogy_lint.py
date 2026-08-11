@@ -8,6 +8,12 @@
 # 사용: python3 brandlogy_lint.py <카피.txt>   |   echo "카피" | python3 brandlogy_lint.py -
 import sys, re
 
+# Windows cp949 콘솔에서 이모지/기호(❌⚠️✅ 등) print가 UnicodeEncodeError로 죽는 것 방지.
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except Exception:
+    pass
+
 if len(sys.argv) > 1 and sys.argv[1] != '-':
     text = open(sys.argv[1], encoding='utf-8').read()
 else:
@@ -19,12 +25,13 @@ errors, warns = [], []
 # 1. "솔직히" 류 (no-soljiki)
 m = re.findall(r'솔직(?:히|하게|한|함)', text)
 if m: errors.append(f'금지어 "솔직히" 류 {len(m)}곳 → 강조는 "정확히/상세히/짚어서"')
-if re.search(r'(?:솔직|정직|정확)(?:하게|히)\s*(?:말|짚|얘기|보면)', text): errors.append('"솔직하게/정직하게/정확하게 말하겠습니다·말하면" 류 강조 도입부 → 군말, 도입부 없이 바로 본론( "정확히 말하면도 하지마")')
+if re.search(r'(?:솔직|정직|정확)(?:하게|히)\s*(?:말|짚|얘기|보면|얘긴)', text): errors.append('"솔직하게/정직하게/정확하게 말하겠습니다·말하면" 류 강조 도입부 → 군말, 도입부 없이 바로 본론( "정확히 말하면도 하지마")')
 # 2. 줄표
 if '—' in text: errors.append('줄표 em dash(—) → 콜론(:)·쉼표(,)·물결(~)')
 if '–' in text: errors.append('줄표 en dash(–) → 물결(~)·콜론')
-# 3. 이모지 (카피 원칙)
-emo = re.findall(r'[\U0001F000-\U0001FAFF☀-⛿✀-➿⌀-⏿⬀-⯿]', text)
+# 3. 이모지 (카피 원칙) — Dingbats 대역엔 ✓·➡처럼 불릿/화살표로 흔히 쓰는 기호도 섞여 있어 제외한다.
+_EMOJI_SAFE = set("✓✔✗✘➡➔→←↑↓·•‣◦")
+emo = [e for e in re.findall(r'[\U0001F000-\U0001FAFF☀-⛿✀-➿⌀-⏿⬀-⯿]', text) if e not in _EMOJI_SAFE]
 if emo: errors.append(f'이모지 {" ".join(sorted(set(emo)))} → 카피엔 이모지 금지')
 # 4. 군더더기 부사 절대 금지 (§2)
 for w in ['근본적으로', '기본적으로']:
@@ -35,23 +42,28 @@ if re.search(r'에 다름 아니', text): errors.append('"~에 다름 아니다"
 if re.search(r'지 않으면 안 [되된됩됐]', text): errors.append('"~지 않으면 안 된다" → "~해야 한다" (일본어투 번역체)')
 if re.search(r'아무리 강조해도 지나치', text): errors.append('"아무리 강조해도 지나치지 않다" → 우리말로 바로 강조 (번역체)')
 if '갈림길' in text: errors.append('"갈림길" 수사 금지 — 번역체로 읽힌다. 선택 상황은 입말로 풀 것')
+# COPYWRITING.md §1 "쓰지 말 것"이 명시적으로 금지어로 지정한 번역체 3종 — WARN이 아니라 ERROR다.
+if re.search(r'가장[^.\n]{0,24}중 (?:의 )?하나', text): errors.append('"가장 ~한 것 중 하나"(one of the most) → "제일 ~한 게" (번역체, §1 금지)')
+if re.search(r'[을를] 가지고 있', text): errors.append('"~을 가지고 있다"(have 직역) → "~이 있다" (번역체, §1 금지)')
+if re.search(r'에 있어서?[\s,]', text): errors.append('"~에 있어(서)" → "~에서/~할 때" (번역체, §1 금지)')
 
 # ───────── WARN (눈 확인) ─────────
 # 5. 대조말투 antithesis (writing-no-ai-antithesis)
 anti = re.findall(r'(?:지 않습니다|이 아닙니다|가 아닙니다|지 않아요|는 게 아니라|것이 아니라|이 아니라|가 아니라)', text)
 if len(anti) >= 3:
     warns.append(f'대조말투(antithesis) 남발 {len(anti)}곳 — "A 아니라 B"·"~하지 않습니다. ~합니다" 대구를 한 글에 3곳+ 반복하면 AI 티. 한두 번 강조는 OK, 남발만 종결 다양화(~죠/~더라고요/의문형)로')
-# 6. 군더더기 표현 (오탐 가능 → 경고, §2)
-for w in ['사실은', '사실 ', '어떻게 보면', '말하자면', '다시 말해', '결국 말이죠']:
-    if w in text:
-        warns.append(f'군더더기 표현 "{w.strip()}" 의심 — 빼는 게 깔끔'); break
+# 6. 군더더기 표현 (오탐 가능 → 경고, §2). 한 편의 카피에 여러 종류가 섞이면
+# 전부 보여줘야지 하나 찾고 멈추면 나머지가 조용히 묻힌다.
+_hedges = [w for w in ['사실은', '사실 ', '어떻게 보면', '말하자면', '다시 말해', '결국 말이죠'] if w in text]
+if _hedges:
+    warns.append(f'군더더기 표현 {[w.strip() for w in _hedges]} 의심 — 빼는 게 깔끔')
 # 7. 메타 표현 (§16: "이 부분은 정말 중요한데" 류)
 if re.search(r'이 (?:부분|점)(?:은|이)[^.]{0,15}(?:중요|핵심)', text) or '주목할' in text or '눈여겨' in text:
     warns.append('메타 표현(이 부분은 중요/주목할 만한) 의심 — 카피는 메타 없이 바로 본론 (§3-5)')
 # 8. 사과·과한 겸양
-for w in ['죄송', '미안', '양해']:
-    if w in text:
-        warns.append(f'사과 표현 "{w}" — 사과문 카피가 아니면 빼라 (§2 사과 반복 금지)'); break
+_apologies = [w for w in ['죄송', '미안', '양해'] if w in text]
+if _apologies:
+    warns.append(f'사과 표현 {_apologies} — 사과문 카피가 아니면 빼라 (§2 사과 반복 금지)')
 # 9. 카피 클리셰 (상투어 2개+면 경고)
 cliche = [c for c in ['여정', '함께하', '당신의 꿈', '꿈을 향', '새로운 시작', '설렘', '특별한 순간', '가슴 뛰', '마음을 담', '빛나는'] if c in text]
 if len(cliche) >= 2:
@@ -63,14 +75,13 @@ if '…' in text or '...' in text:
     warns.append('줄임표(…) 의심 — 카피에선 절제, 문장으로 끊기')
 # 11. 번역체 의심 (writing-no-translationese — 오탐 가능 패턴은 WARN, 확정 패턴은 위 ERROR)
 trans = []
-if re.search(r'가장[^.\n]{0,24}중 (?:의 )?하나', text): trans.append('"가장 ~한 것 중 하나"(one of the most) → "제일 ~한 게"')
-if re.search(r'[을를] 가지고 있', text): trans.append('"~을 가지고 있다"(have 직역) → "~이 있다"')
 if re.search(r'에 의해|에 의하여', text): trans.append('"~에 의해"(수동태) → 능동문으로')
-if re.search(r'에 있어서?[\s,]', text): trans.append('"~에 있어(서)" → "~에서/~할 때"')
 if re.search(r'할 필요가 있', text): trans.append('"~할 필요가 있다" → "~해야 한다"')
 if re.search(r'것이 가능하', text): trans.append('"~하는 것이 가능하다" → "~할 수 있다"')
 if '에도 불구하고' in text: trans.append('"~에도 불구하고"(despite) → "~인데도/~지만"')
 if '그녀' in text: trans.append('"그녀"(she 직역) → 이름·직함으로')
+# 짧은 카피는 "에 대해"가 3회면 이미 과하다고 보고, 긴 글(writing_lint)은 4회부터 본다 —
+# 의도된 차이다(카피 vs 장문). 두 린터를 같이 고칠 땐 이 차이를 유지할 것.
 ndaehae = len(re.findall(r'에 대해|에 대한', text))
 if ndaehae >= 3: trans.append(f'"에 대해/에 대한" {ndaehae}회(about 남용) → 조사로 풀기')
 if trans:

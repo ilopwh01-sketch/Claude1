@@ -87,9 +87,12 @@ function bubble(s, who, text, y, cL, cR) {
 
 const path = require("path");
 const OUT = path.join(__dirname, "샘플-채팅슬라이드-v01.pptx");
+const PY = process.env.PYTHON || "python3";   // README §4: 파이썬 실행 파일 이름이 다르면 이 환경변수로
 pres.writeFile({ fileName: OUT }).then(p => {
-  require("child_process").execSync(`python3 "${path.join(__dirname, "fix-slidenum.py")}" "${OUT}"`, { stdio: "inherit" });
-  try { require("child_process").execSync(`python3 "${path.join(__dirname, "ppt_lint.py")}" "${__filename}" "${OUT}"`, { stdio: "inherit" }); }
-  catch (e) { console.log(" ppt_lint ERROR : 위 목록을 0으로 고쳐 다시 빌드. ERROR 있는 채 '완료' 금지."); }
+  require("child_process").execSync(`${PY} "${path.join(__dirname, "fix-slidenum.py")}" "${OUT}"`, { stdio: "inherit" });
+  // 코드 강제: catch에서 로그만 찍고 넘어가면 ERROR가 있어도 아래 "Saved"가 찍혀
+  // 게이트가 무력화된다(과거에 이 버그로 사고난 적 있음) → 반드시 exit(1)로 빌드를 실패시킨다.
+  try { require("child_process").execSync(`${PY} "${path.join(__dirname, "ppt_lint.py")}" "${__filename}" "${OUT}"`, { stdio: "inherit" }); }
+  catch (e) { console.log(" ppt_lint ERROR : 위 목록을 0으로 고쳐 다시 빌드. ERROR 있는 채 '완료' 금지."); process.exit(1); }
   console.log(" Saved:", p);
 }).catch(e => { console.error("", e); process.exit(1); });
