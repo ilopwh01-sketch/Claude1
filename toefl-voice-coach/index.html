@@ -97,6 +97,18 @@ ul.tips{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
 .hist td.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
 .tablewrap{overflow-x:auto}
 footer{font-size:13px;color:var(--muted)}
+.vcard{display:flex;flex-direction:column;gap:18px}
+.vword{font:800 clamp(30px,6vw,44px)/1.05 var(--display);letter-spacing:-.01em;overflow-wrap:anywhere}
+.vmeta{font:500 14px var(--mono);color:var(--muted);margin-top:4px}
+.vstep{display:flex;flex-direction:column;gap:10px;padding-top:16px;border-top:1px solid var(--line)}
+.vex{font-size:19px;line-height:1.5}
+.vex mark{background:var(--teal-soft);color:var(--ink);padding:0 3px;border-radius:4px;font-weight:700}
+.vko{font:700 19px var(--body)}
+.coll{font:700 14px var(--body);padding:7px 12px;border-radius:999px;border:1px solid var(--teal);background:var(--teal-soft);color:var(--ink);cursor:pointer}
+.coll:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+.register{display:flex;flex-direction:column;gap:6px}
+.rate .btn{flex:1 1 110px;justify-content:center;flex-direction:column;gap:0}
+.rate small{font:500 12px var(--mono);color:var(--muted)}
 </style>
 </head>
 <body>
@@ -112,14 +124,15 @@ footer{font-size:13px;color:var(--muted)}
   </header>
 
   <div id="noMic" class="notice" hidden>
-    Your browser can't turn speech into text. Use <b>Google Chrome</b> or <b>Microsoft Edge</b> on a computer or Android phone for voice mode. You can still listen to every question and type your answer below.<br>
-    <span class="ko">음성 인식은 Chrome 또는 Edge 브라우저에서 동작합니다. 지금은 질문 듣기 + 타이핑으로 연습할 수 있어요.</span>
+    Your browser can't turn speech into text. For voice mode use <b>Chrome</b> (computer or Android) or <b>Safari</b> (iPhone, iPad, Mac). You can still listen to every question and type your answer below.<br>
+    <span class="ko">음성 인식은 Chrome(PC·안드로이드) 또는 Safari(아이폰·맥)에서 동작합니다. 아이폰은 설정 → 일반 → 키보드 → '받아쓰기'를 켜 주세요. 지금은 질문 듣기 + 타이핑으로 연습할 수 있어요.</span>
   </div>
 
   <nav role="tablist">
     <button role="tab" data-tab="repeat" aria-selected="true">Listen &amp; Repeat</button>
     <button role="tab" data-tab="interview" aria-selected="false">Take an Interview</button>
     <button role="tab" data-tab="classic" aria-selected="false">Independent (Classic)</button>
+    <button role="tab" data-tab="vocab" aria-selected="false">Vocabulary</button>
     <button role="tab" data-tab="history" aria-selected="false">My Progress</button>
   </nav>
 
@@ -194,6 +207,81 @@ footer{font-size:13px;color:var(--muted)}
     <textarea id="classicType" placeholder="No microphone? Type your answer here, then press Get feedback." hidden></textarea>
     <button class="btn" id="classicCheck" hidden>Get feedback</button>
     <div id="classicResult" hidden></div>
+  </section>
+
+  <!-- VOCABULARY -->
+  <section class="panel" id="tab-vocab" hidden>
+    <div class="row" style="justify-content:space-between">
+      <h2>Vocabulary, the native way</h2>
+      <select id="vocabDeck" aria-label="Choose a word deck"></select>
+    </div>
+    <p>Natives don't memorize word lists. They hear a word in a sentence, guess the meaning, and learn the words it goes with. Then they use it themselves.<br>
+    <span class="ko">① 문장 속에서 듣고 뜻 추측 → ② 뜻·짝꿍 표현(collocation) 확인 → ③ 소리 내어 발음 → ④ 내 문장 만들어 말하기 → ⑤ 기억 정도 체크 (복습 날짜 자동 설정)</span></p>
+    <div class="stats" id="vocabStats"></div>
+
+    <div id="vocabCard" class="vcard">
+      <div class="row" style="justify-content:space-between;align-items:baseline">
+        <div>
+          <div class="vword" id="vWord"></div>
+          <div class="vmeta" id="vMeta"></div>
+        </div>
+        <button class="btn" id="vHearWord">🔊 Word</button>
+      </div>
+
+      <div class="vstep">
+        <h3>1 · Hear it in context</h3>
+        <p class="vex" id="vEx"></p>
+        <div class="row">
+          <button class="btn primary" id="vHearEx">▶ Play sentence</button>
+          <button class="btn" id="vReveal">Show meaning</button>
+        </div>
+        <p class="ko" id="vGuess">Guess the meaning from the sentence first. 먼저 문장만 듣고 뜻을 추측해 보세요.</p>
+      </div>
+
+      <div class="vstep" id="vInfo" hidden>
+        <h3>2 · Meaning &amp; the words it goes with</h3>
+        <p class="vko" id="vKo"></p>
+        <div class="row" id="vColl"></div>
+        <p class="ko">Tap a phrase to hear it. 짝꿍 표현을 눌러 듣고 따라 말하세요.</p>
+        <div class="register">
+          <div><span class="chip warn">In conversation</span> <span id="vCasual"></span></div>
+          <div><span class="chip good">In academic English</span> <span id="vFormal"></span></div>
+        </div>
+        <p class="ko" id="vNote" hidden></p>
+      </div>
+
+      <div class="vstep">
+        <h3>3 · Say it</h3>
+        <div class="row">
+          <button class="btn" id="vSay"><span class="dot"></span>Say the word</button>
+          <span id="vSayRes" aria-live="polite"></span>
+        </div>
+      </div>
+
+      <div class="vstep">
+        <h3>4 · Use it in your own sentence</h3>
+        <p class="ko">Talk about your life, using one of the phrases above. 내 경험으로 문장을 만들어 말해 보세요.</p>
+        <div class="row">
+          <button class="btn" id="vUse"><span class="dot"></span>Speak a sentence</button>
+          <button class="btn" id="vUseStop" disabled>Done</button>
+        </div>
+        <div class="transcript" id="vUseHeard" aria-live="polite"><span class="interim">Your sentence will appear here.</span></div>
+        <textarea id="vUseType" placeholder="No microphone? Type your sentence here, then press Check." hidden></textarea>
+        <button class="btn" id="vUseCheck" hidden>Check</button>
+        <div id="vUseRes"></div>
+      </div>
+
+      <div class="vstep">
+        <h3>5 · How well do you know it?</h3>
+        <div class="row rate">
+          <button class="btn" data-rate="0">Again <small>now</small></button>
+          <button class="btn" data-rate="1">Hard <small>1 day</small></button>
+          <button class="btn" data-rate="2">Good <small id="goodDays"></small></button>
+          <button class="btn" data-rate="3">Easy <small id="easyDays"></small></button>
+        </div>
+      </div>
+    </div>
+    <div id="vocabDone" class="notice" hidden></div>
   </section>
 
   <!-- HISTORY -->
@@ -344,7 +432,7 @@ const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 const hasSR = !!SR;
 if(!hasSR){
   document.getElementById("noMic").hidden = false;
-  document.querySelectorAll("textarea, #repeatCheck, #interviewCheck, #classicCheck").forEach(el => el.hidden = false);
+  document.querySelectorAll("textarea:not([readonly]), #repeatCheck, #interviewCheck, #classicCheck, #vUseCheck").forEach(el => el.hidden = false);
 }
 /* A listener that keeps restarting until stopped (Chrome ends sessions after silence). */
 function makeListener(outEl){
@@ -519,8 +607,9 @@ function renderHistory(){
 /* ---------------- Tabs ---------------- */
 document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
   document.querySelectorAll("nav button").forEach(x => x.setAttribute("aria-selected", x===b));
-  ["repeat","interview","classic","history"].forEach(t => $("tab-"+t).hidden = t !== b.dataset.tab);
+  ["repeat","interview","classic","vocab","history"].forEach(t => $("tab-"+t).hidden = t !== b.dataset.tab);
   if(b.dataset.tab === "history") renderHistory();
+  if(b.dataset.tab === "vocab") vocabStart();
   synth && synth.cancel();
 });
 
@@ -660,7 +749,190 @@ $("classicStart").onclick = async () => {
 $("classicStop").onclick = () => C.timer && C.timer.cancel();
 $("classicCheck").onclick = () => classicFinish(45);
 
+/* ---------------- Vocabulary ---------------- */
+/* w: word, p: part of speech, s: stress (CAPS = stressed syllable), k: Korean meaning,
+   c: collocations natives use, e: example, ca: how people say it in conversation,
+   f: academic / formal alternative, n: usage note, fm: accepted forms for matching */
+const DECKS = [
+  { name: "TOEFL academic words", words: [
+    { w:"significant", p:"adj", s:"sig-NIF-i-cant", k:"중요한, 상당한", c:["a significant increase","play a significant role","significantly different"], e:"The new policy had a significant impact on small businesses.", ca:"a big deal / a lot", f:"significant, substantial" },
+    { w:"analyze", p:"verb", s:"AN-a-lyze", k:"분석하다", c:["analyze data","carefully analyze","analyze the results"], e:"The researchers analyzed data from over two thousand students.", ca:"look closely at, break down", f:"analyze, examine", n:"명사형 analysis (a-NAL-y-sis): 강세 위치가 바뀌어요.", fm:["analyz","analys"] },
+    { w:"approach", p:"noun / verb", s:"a-PROACH", k:"접근법; 다가가다", c:["take a different approach","a new approach to","approach a problem"], e:"We need to take a completely different approach to this problem.", ca:"a different way of doing it", f:"approach, method" },
+    { w:"assume", p:"verb", s:"a-SSUME", k:"가정하다, (사실이라고) 추정하다", c:["assume that","it's safe to assume","wrongly assume"], e:"It's safe to assume that most students check their phones during class.", ca:"guess, figure", f:"assume, presume", fm:["assum"] },
+    { w:"benefit", p:"noun / verb", s:"BEN-e-fit", k:"이익; 혜택을 받다", c:["benefit from","the benefits of","a major benefit"], e:"Students benefit from getting feedback right away.", ca:"the good thing about, helps", f:"benefit, advantage" },
+    { w:"contribute", p:"verb", s:"con-TRIB-ute", k:"기여하다; ~의 원인이 되다", c:["contribute to","contribute significantly to","contribute ideas"], e:"A lack of sleep can contribute to poor grades.", ca:"add to, help cause", f:"contribute to", n:"contribute to + 명사/동명사 (to 뒤에 동사원형 X)", fm:["contribut"] },
+    { w:"crucial", p:"adj", s:"CRU-cial", k:"결정적인, 매우 중요한", c:["play a crucial role","crucial for","absolutely crucial"], e:"Water plays a crucial role in controlling body temperature.", ca:"super important, key", f:"crucial, essential" },
+    { w:"decline", p:"noun / verb", s:"de-CLINE", k:"감소(하다); 거절하다", c:["a sharp decline in","steadily decline","decline an offer"], e:"There has been a sharp decline in bee populations.", ca:"drop, go down; say no", f:"decline, decrease", fm:["declin"] },
+    { w:"demonstrate", p:"verb", s:"DEM-on-strate", k:"입증하다, 보여주다", c:["clearly demonstrate","demonstrate that","demonstrate the ability to"], e:"The experiment clearly demonstrated that plants grow toward light.", ca:"show", f:"demonstrate, illustrate", fm:["demonstrat"] },
+    { w:"determine", p:"verb", s:"de-TER-mine", k:"결정하다, 알아내다", c:["determine whether","help determine","determine the cause of"], e:"Scientists are still trying to determine the cause of the problem.", ca:"figure out", f:"determine, identify", fm:["determin"] },
+    { w:"emerge", p:"verb", s:"e-MERGE", k:"나타나다, 드러나다", c:["emerge from","a pattern emerged","new evidence emerged"], e:"A clear pattern emerged from the data.", ca:"come out, show up", f:"emerge, arise", fm:["emerg"] },
+    { w:"enhance", p:"verb", s:"en-HANCE", k:"향상시키다, 높이다", c:["enhance performance","greatly enhance","enhance the experience"], e:"Some people think music can enhance their focus while studying.", ca:"make better, boost", f:"enhance, improve", fm:["enhanc"] },
+    { w:"evidence", p:"noun", s:"EV-i-dence", k:"증거, 근거", c:["strong evidence","evidence suggests that","there is little evidence"], e:"There is strong evidence that exercise improves memory.", ca:"proof", f:"evidence", n:"셀 수 없는 명사: an evidence (X) → a piece of evidence (O)" },
+    { w:"factor", p:"noun", s:"FAC-tor", k:"요인", c:["a key factor","a major factor in","several factors"], e:"Cost was a major factor in my decision.", ca:"reason, thing", f:"factor" },
+    { w:"hypothesis", p:"noun", s:"hy-POTH-e-sis", k:"가설", c:["test a hypothesis","support the hypothesis","the hypothesis that"], e:"The results supported the researchers' hypothesis.", ca:"an idea they wanted to test", f:"hypothesis, theory", n:"복수형 hypotheses (hy-POTH-e-sees)", fm:["hypothes"] },
+    { w:"impact", p:"noun / verb", s:"IM-pact", k:"영향(을 주다), 충격", c:["have an impact on","a huge impact","a negative impact"], e:"Social media has a huge impact on how teenagers see themselves.", ca:"effect, change", f:"impact, influence", n:"have an impact on (O) / have an impact to (X)" },
+    { w:"indicate", p:"verb", s:"IN-di-cate", k:"나타내다, 시사하다", c:["studies indicate that","clearly indicate","indicate a problem"], e:"Recent studies indicate that sleep affects learning.", ca:"show, suggest", f:"indicate, suggest", fm:["indicat"] },
+    { w:"maintain", p:"verb", s:"main-TAIN", k:"유지하다; 주장하다", c:["maintain a balance","maintain contact with","maintain that"], e:"It's hard to maintain a healthy balance between work and school.", ca:"keep", f:"maintain, sustain", n:"명사형 maintenance (MAIN-te-nance)", fm:["maintain","maintenanc"] },
+    { w:"perspective", p:"noun", s:"per-SPEC-tive", k:"관점, 시각", c:["from my perspective","a whole new perspective","put things in perspective"], e:"Living abroad gave me a whole new perspective on life.", ca:"point of view, the way I see it", f:"perspective, viewpoint" },
+    { w:"phenomenon", p:"noun", s:"phe-NOM-e-non", k:"현상", c:["a natural phenomenon","a common phenomenon","this phenomenon"], e:"Bird migration is a fascinating natural phenomenon.", ca:"something that happens", f:"phenomenon", n:"복수형 phenomena", fm:["phenomen"] },
+    { w:"promote", p:"verb", s:"pro-MOTE", k:"촉진하다; 승진시키다; 홍보하다", c:["promote health","promote growth","get promoted"], e:"Regular exercise promotes better sleep.", ca:"help, encourage", f:"promote, foster", fm:["promot"] },
+    { w:"reluctant", p:"adj", s:"re-LUC-tant", k:"(~하기를) 꺼리는", c:["reluctant to ask","somewhat reluctant","a reluctant decision"], e:"Many students are reluctant to ask questions in class.", ca:"don't really want to", f:"reluctant, unwilling", n:"be reluctant to + 동사원형", fm:["reluctan"] },
+    { w:"subsequent", p:"adj", s:"SUB-se-quent", k:"그 다음의, 이후의", c:["in subsequent years","subsequent studies","subsequently"], e:"Subsequent studies found very similar results.", ca:"later, after that", f:"subsequent, following" },
+    { w:"sustain", p:"verb", s:"sus-TAIN", k:"지속시키다, 유지하다", c:["sustain growth","sustain interest","hard to sustain"], e:"It's hard to sustain motivation over a long semester.", ca:"keep going, keep up", f:"sustain, maintain", n:"형용사 sustainable (지속 가능한)" },
+    { w:"undergo", p:"verb", s:"un-der-GO", k:"(변화 등을) 겪다", c:["undergo changes","undergo surgery","undergo a transformation"], e:"The city underwent huge changes in the 1990s.", ca:"go through", f:"undergo, experience", fm:["undergo","underwent","undergone","undergoing"] }
+  ]},
+  { name: "Phrasal verbs natives use", words: [
+    { w:"come up with", p:"phrasal verb", s:"come UP with", k:"(아이디어·계획을) 생각해내다", c:["come up with an idea","come up with a plan","come up with a solution"], e:"Our group came up with a great idea for the project.", ca:"come up with", f:"devise, develop", fm:["come up with","came up with","coming up with","comes up with"] },
+    { w:"figure out", p:"phrasal verb", s:"figure OUT", k:"알아내다, 이해하다", c:["figure out how to","figure out the answer","figure it out"], e:"I finally figured out how to solve the problem.", ca:"figure out", f:"determine, work out", n:"대명사는 가운데: figure it out (O) / figure out it (X)", fm:["figure out","figured out","figuring out","figures out","figure it out","figured it out"] },
+    { w:"end up", p:"phrasal verb", s:"end UP", k:"결국 ~하게 되다", c:["end up doing","end up in","end up with"], e:"I didn't plan to study biology, but I ended up loving it.", ca:"end up", f:"eventually, in the end", n:"end up + -ing: ended up loving (O) / ended up to love (X)", fm:["end up","ended up","ending up","ends up"] },
+    { w:"run into", p:"phrasal verb", s:"run IN-to", k:"(문제에) 부딪히다; 우연히 만나다", c:["run into a problem","run into trouble","run into an old friend"], e:"We ran into a problem with the lab equipment.", ca:"run into", f:"encounter", fm:["run into","ran into","running into","runs into"] },
+    { w:"look into", p:"phrasal verb", s:"look IN-to", k:"조사하다, 알아보다", c:["look into the issue","look into it","I'll look into it"], e:"The university is looking into the students' complaint.", ca:"look into, check out", f:"investigate, examine", fm:["look into","looked into","looking into","looks into"] },
+    { w:"point out", p:"phrasal verb", s:"point OUT", k:"지적하다, 짚어 말하다", c:["point out that","point out a mistake","as you pointed out"], e:"My professor pointed out a small mistake in my essay.", ca:"point out, mention", f:"note, indicate", fm:["point out","pointed out","pointing out","points out"] },
+    { w:"turn out", p:"phrasal verb", s:"turn OUT", k:"~로 판명되다, 알고 보니 ~이다", c:["it turns out that","turn out to be","as it turned out"], e:"It turned out that the test was much easier than I expected.", ca:"turns out…", f:"prove to be", fm:["turn out","turned out","turning out","turns out"] },
+    { w:"carry out", p:"phrasal verb", s:"carry OUT", k:"수행하다, 실행하다", c:["carry out research","carry out an experiment","carry out a plan"], e:"The team carried out an experiment on sleep and memory.", ca:"do, run", f:"conduct, perform", fm:["carry out","carried out","carrying out","carries out"] },
+    { w:"put off", p:"phrasal verb", s:"put OFF", k:"미루다, 연기하다", c:["put off doing","put it off","keep putting it off"], e:"Don't put off your assignment until the last minute.", ca:"put off", f:"postpone, delay", n:"put off + -ing: put off studying", fm:["put off","putting off","puts off","put it off"] },
+    { w:"get used to", p:"phrase", s:"get USED to", k:"~에 익숙해지다", c:["get used to living","get used to it","be used to"], e:"It took me a month to get used to living alone.", ca:"get used to", f:"adjust to, adapt to", n:"used to + -ing (익숙함) vs used to + 동사원형 (과거 습관)", fm:["get used to","got used to","getting used to","gets used to","gotten used to","be used to","am used to","was used to"] },
+    { w:"keep up with", p:"phrasal verb", s:"keep UP with", k:"(뒤처지지 않고) 따라가다", c:["keep up with the class","keep up with the news","hard to keep up with"], e:"It's hard to keep up with all the reading in this course.", ca:"keep up", f:"stay current with", fm:["keep up with","kept up with","keeping up with","keeps up with","keep up"] },
+    { w:"deal with", p:"phrasal verb", s:"DEAL with", k:"다루다, 처리하다, 대처하다", c:["deal with stress","deal with a problem","hard to deal with"], e:"Everyone deals with stress in different ways.", ca:"deal with, handle", f:"cope with, address", fm:["deal with","dealt with","dealing with","deals with"] },
+    { w:"go over", p:"phrasal verb", s:"go O-ver", k:"검토하다, 복습하다", c:["go over the notes","go over it again","go over the answers"], e:"Can we go over the answers before the exam?", ca:"go over", f:"review", fm:["go over","went over","going over","goes over","gone over"] },
+    { w:"bring up", p:"phrasal verb", s:"bring UP", k:"(화제를) 꺼내다", c:["bring up a topic","bring up a good point","bring it up"], e:"She brought up an interesting point during the discussion.", ca:"bring up, mention", f:"raise, mention", fm:["bring up","brought up","bringing up","brings up","bring it up","brought it up"] },
+    { w:"stand out", p:"phrasal verb", s:"stand OUT", k:"눈에 띄다, 두드러지다", c:["stand out from","really stand out","make you stand out"], e:"Her presentation really stood out from the others.", ca:"stand out", f:"be distinctive", fm:["stand out","stood out","standing out","stands out"] },
+    { w:"cut down on", p:"phrasal verb", s:"cut DOWN on", k:"(양을) 줄이다", c:["cut down on sugar","cut down on screen time","cut down on coffee"], e:"I'm trying to cut down on coffee during exam week.", ca:"cut down on, cut back on", f:"reduce", fm:["cut down on","cutting down on","cuts down on","cut back on"] }
+  ]}
+];
+const DAY = 86400000;
+const INTERVALS = [0, 1, 3, 7, 14, 30, 60]; // days per box
+const NEW_PER_DAY = 10;
+const V = { deck: 0, queue: [], cur: null, sayListener: makeListener(document.createElement("div")), useListener: makeListener($("vUseHeard")), sayTimer: null };
+
+function vKey(item){ return DECKS[V.deck].name + "|" + item.w; }
+function vProg(){ return store.get("vocab") || {}; }
+function vMatch(text, item){
+  const t = " " + words(text).join(" ") + " ";
+  const forms = item.fm || [item.w.replace(/(e|y)$/, "")];
+  return forms.some(f => new RegExp("\\b" + f.toLowerCase().replace(/[^a-z' ]/g,"") + (f.includes(" ") ? "\\b" : "[a-z']*\\b")).test(t));
+}
+function vBuildQueue(){
+  const p = vProg(), now = Date.now(), list = DECKS[V.deck].words;
+  const due = list.filter(it => p[vKey(it)] && p[vKey(it)].due <= now).sort((a,b) => p[vKey(a)].due - p[vKey(b)].due);
+  const today = new Date().toDateString();
+  const introduced = (store.get("vocabNew") || {});
+  const usedToday = introduced.d === today ? (introduced.n || 0) : 0;
+  const fresh = list.filter(it => !p[vKey(it)]).slice(0, Math.max(0, NEW_PER_DAY - usedToday));
+  V.queue = [...due, ...fresh];
+}
+function vRenderStats(){
+  const p = vProg(), now = Date.now(), list = DECKS[V.deck].words;
+  const seen = list.filter(it => p[vKey(it)]);
+  const due = seen.filter(it => p[vKey(it)].due <= now).length;
+  const learned = seen.filter(it => p[vKey(it)].box >= 3).length;
+  $("vocabStats").innerHTML = `
+    <div class="stat"><b>${V.queue.length}</b><span>cards left today</span></div>
+    <div class="stat"><b>${due}</b><span>due for review</span></div>
+    <div class="stat"><b>${learned}/${list.length}</b><span>words learned (7+ days)</span></div>`;
+}
+function vShow(){
+  vRenderStats();
+  const item = V.cur = V.queue[0];
+  $("vocabCard").hidden = !item; $("vocabDone").hidden = !!item;
+  if(!item){
+    $("vocabDone").innerHTML = `All done for today in this deck. Come back tomorrow for your reviews, or switch decks.<br><span class="ko">오늘 학습 완료! 내일 복습 카드가 다시 나타납니다.</span>`;
+    return;
+  }
+  $("vWord").textContent = item.w;
+  $("vMeta").textContent = `${item.p} · ${item.s}`;
+  const re = new RegExp("(" + (item.fm || [item.w.replace(/(e|y)$/, "")]).map(f => f.replace(/[^a-zA-Z' ]/g,"")).sort((a,b)=>b.length-a.length).join("|") + ")([a-z']*)", "i");
+  $("vEx").innerHTML = esc(item.e).replace(re, "<mark>$1$2</mark>");
+  $("vKo").textContent = item.k;
+  $("vColl").innerHTML = "";
+  item.c.forEach(c => { const b = document.createElement("button"); b.className = "coll"; b.textContent = "🔊 " + c; b.onclick = () => speak(c); $("vColl").append(b); });
+  $("vCasual").textContent = item.ca;
+  $("vFormal").textContent = item.f;
+  $("vNote").hidden = !item.n; $("vNote").textContent = item.n ? "💡 " + item.n : "";
+  $("vInfo").hidden = true; $("vGuess").hidden = false; $("vReveal").hidden = false;
+  $("vSayRes").textContent = "";
+  $("vUseHeard").innerHTML = `<span class="interim">Your sentence will appear here.</span>`;
+  $("vUseType").value = ""; $("vUseRes").innerHTML = "";
+  const box = (vProg()[vKey(item)] || {box:0}).box;
+  $("goodDays").textContent = INTERVALS[Math.min(box+1, INTERVALS.length-1)] + " days";
+  $("easyDays").textContent = INTERVALS[Math.min(box+2, INTERVALS.length-1)] + " days";
+}
+function vocabStart(){ vBuildQueue(); vShow(); }
+function vReveal(){ $("vInfo").hidden = false; $("vGuess").hidden = true; $("vReveal").hidden = true; }
+
+DECKS.forEach((d,i) => { const o = document.createElement("option"); o.value = i; o.textContent = d.name; $("vocabDeck").append(o); });
+$("vocabDeck").onchange = () => { V.deck = +$("vocabDeck").value; store.set("vocabDeck", V.deck); vocabStart(); };
+$("vHearWord").onclick = () => speak(V.cur.w);
+$("vHearEx").onclick = () => speak(V.cur.e);
+$("vReveal").onclick = () => { vReveal(); speak(V.cur.c[0]); };
+
+if(!hasSR){ $("vSay").hidden = true; $("vSayRes").textContent = "Listen with 🔊 Word and repeat it out loud 3 times. 🔊 버튼을 듣고 3번 따라 말하세요."; $("vUse").hidden = true; $("vUseStop").hidden = true; }
+$("vSay").onclick = async () => {
+  const btn = $("vSay");
+  if(btn.classList.contains("rec")) return;
+  btn.classList.add("rec"); $("vSayRes").textContent = "Listening…";
+  V.sayListener.start();
+  await new Promise(r => setTimeout(r, 3500));
+  const heard = await V.sayListener.stop();
+  btn.classList.remove("rec");
+  const ok = vMatch(heard, V.cur);
+  $("vSayRes").innerHTML = `<span class="chip ${ok ? "good" : "bad"}">${ok ? "Clear ✓" : "Try again"}</span> I heard: “${esc(heard || "nothing")}”` +
+    (ok ? "" : ` <span class="ko">강세(${esc(V.cur.s)})를 살려 또렷하게 말해 보세요.</span>`);
+};
+
+async function vCheckUse(text){
+  const item = V.cur, w = words(text);
+  const used = vMatch(text, item);
+  const coll = item.c.find(c => (" " + w.join(" ") + " ").includes(" " + words(c).slice(0, 2).join(" ") + " "));
+  const long = w.length >= 7;
+  const cls = used && long ? "good" : used ? "warn" : "bad";
+  const msg = !used ? `I didn't hear “${item.w}”. Try again and say it clearly.`
+    : !long ? "Good! Now make it longer. Add why, when, or where (7+ words)."
+    : coll ? "Great! You used a natural collocation." : "Nice sentence. Try again with one of the phrases above to sound more native.";
+  const prompt = `I'm learning English vocabulary for the TOEFL. Is this sentence natural for a native speaker? Correct it if needed, explain briefly, and give me 2 more natural example sentences with "${item.w}".\n\nMy sentence: ${text}`;
+  $("vUseRes").innerHTML = `<div class="row"><span class="chip ${cls}">${used ? (long ? "Well used ✓" : "Used ✓") : "Word missing"}</span><span>${esc(msg)}</span></div>
+    <div class="row" style="margin-top:8px"><button class="btn" id="vCopy">Ask Claude: is it natural?</button></div>
+    <textarea id="vCopyTxt" readonly hidden></textarea>`;
+  $("vCopyTxt").value = prompt;
+  $("vCopy").onclick = async () => {
+    try{ await navigator.clipboard.writeText(prompt); $("vCopy").textContent = "Copied ✓ Paste it to Claude"; }
+    catch(e){ $("vCopyTxt").hidden = false; $("vCopyTxt").select(); $("vCopy").textContent = "Select the text below and copy it"; }
+  };
+  if(used) vReveal();
+}
+$("vUse").onclick = () => {
+  $("vUse").disabled = true; $("vUse").classList.add("rec"); $("vUseStop").disabled = false; $("vUseRes").innerHTML = "";
+  V.useListener.start();
+};
+$("vUseStop").onclick = async () => {
+  $("vUseStop").disabled = true;
+  const text = await V.useListener.stop();
+  $("vUse").disabled = false; $("vUse").classList.remove("rec");
+  vCheckUse(text);
+};
+$("vUseCheck").onclick = () => vCheckUse($("vUseType").value);
+
+document.querySelectorAll(".rate .btn").forEach(b => b.onclick = () => {
+  const item = V.cur; if(!item) return;
+  const rate = +b.dataset.rate, p = vProg(), k = vKey(item);
+  if(!p[k]){
+    const today = new Date().toDateString(), n = store.get("vocabNew") || {};
+    store.set("vocabNew", { d: today, n: (n.d === today ? n.n || 0 : 0) + 1 });
+  }
+  const box = (p[k] || {box:0}).box;
+  const nb = rate === 0 ? 0 : rate === 1 ? Math.max(1, box) : Math.min(box + rate - 1, INTERVALS.length - 1);
+  const days = rate === 1 ? 1 : INTERVALS[nb];
+  p[k] = { box: nb, due: Date.now() + days * DAY };
+  store.set("vocab", p);
+  V.queue.shift();
+  if(rate === 0) V.queue.splice(Math.min(3, V.queue.length), 0, item); // see it again in a few cards
+  if(rate > 0) saveHistory("Vocabulary", `${item.w}: ${["Again","Hard","Good","Easy"][rate]}`, null, null);
+  synth && synth.cancel();
+  vShow();
+});
+
 /* ---------------- Init ---------------- */
+V.deck = Math.min(+(store.get("vocabDeck") || 0), DECKS.length - 1); $("vocabDeck").value = V.deck;
 $("histClear").onclick = () => { store.set("hist", []); renderHistory(); };
 voiceSel.onchange = () => { const v = voices[+voiceSel.value]; v && store.set("voice", v.name); };
 const savedRate = store.get("rate"); if(savedRate) rateEl.value = savedRate;

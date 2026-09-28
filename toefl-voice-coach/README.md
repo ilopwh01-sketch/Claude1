@@ -25,7 +25,15 @@ python3 -m http.server 8000
 | **Listen & Repeat** | Hear a sentence once and repeat it exactly. 7 sentences per set, getting longer. | Word-by-word match: green = correct, red = missed. |
 | **Take an Interview** | Answer 4 questions on one topic, 45 seconds each, no preparation time. | Word count, speaking speed (WPM), filler words, linking words, example check, 0–4 practice estimate, and a model answer you can listen to. |
 | **Independent (Classic)** | 15 seconds to prepare, 45 seconds to give your opinion. | Same as the interview. |
+| **Vocabulary** | Learn words the native way: hear the word in a sentence, guess the meaning, learn the phrases it goes with, say it, then use it in your own spoken sentence. | Pronunciation check, a check that you used the word, spaced-repetition reviews (Again / Hard / Good / Easy). |
 | **My Progress** | See your past results (saved in your browser). | |
+
+### Vocabulary decks
+
+- **TOEFL academic words** (25): *significant, analyze, crucial, evidence, hypothesis, phenomenon…*, each with stress pattern, Korean meaning, natural collocations, and a conversational vs. academic alternative.
+- **Phrasal verbs natives use** (16): *come up with, figure out, end up, turn out, put off…*, the everyday verbs that make speech sound native.
+
+Each day you get up to 10 new words plus the words due for review. Words you rate "Good" come back after 1, 3, 7, 14, 30 and 60 days.
 
 Every feedback card has a **Copy for Claude feedback** button. Paste the copied text into Claude to get grammar corrections, a rubric-based score, and an improved answer.
 
