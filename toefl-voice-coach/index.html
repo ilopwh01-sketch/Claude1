@@ -1,0 +1,944 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>TOEFL Voice Coach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+:root{
+  color-scheme: light;
+  --ink:#14213D; --paper:#F5F6FA; --card:#FFFFFF; --line:#DCE0EA; --muted:#5B6479;
+  --teal:#0E7C7B; --teal-soft:#DDF1F0; --amber:#B45309; --amber-soft:#FDF0DC;
+  --red:#C8102E; --red-soft:#FBE3E7; --good:#1C7C3A; --good-soft:#E0F2E6;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --ink:#E6EAF4; --paper:#0F1524; --card:#172036; --line:#2A3552; --muted:#9AA4BD;
+    --teal:#4FC3C1; --teal-soft:#123A3E; --amber:#F2A541; --amber-soft:#3A2A12;
+    --red:#FF6B7F; --red-soft:#3D1620; --good:#6FD08C; --good-soft:#153624;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --ink:#E6EAF4; --paper:#0F1524; --card:#172036; --line:#2A3552; --muted:#9AA4BD;
+  --teal:#4FC3C1; --teal-soft:#123A3E; --amber:#F2A541; --amber-soft:#3A2A12;
+  --red:#FF6B7F; --red-soft:#3D1620; --good:#6FD08C; --good-soft:#153624;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font:16px/1.55 var(--body);padding-inline:16px;padding-block:20px 48px}
+[hidden]{display:none!important}
+.wrap{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+header{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:12px}
+h1{font:800 clamp(28px,5vw,40px)/1.05 var(--display);margin:0;letter-spacing:-.01em;text-wrap:balance}
+h1 small{display:block;font:600 13px/1.4 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--teal);margin-bottom:6px}
+h2{font:600 22px/1.2 var(--display);margin:0;text-wrap:balance}
+h3{font:700 15px/1.3 var(--body);margin:0;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+p{margin:0}
+.ko{color:var(--muted);font-size:14px}
+.settings{display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:14px;color:var(--muted)}
+select,input[type=range]{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 8px;max-width:100%}
+nav{display:flex;gap:6px;flex-wrap:wrap;border-bottom:2px solid var(--line)}
+nav button{font:700 15px var(--body);background:none;border:0;color:var(--muted);padding:10px 14px;border-bottom:3px solid transparent;margin-bottom:-2px;cursor:pointer}
+nav button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--teal)}
+nav button:focus-visible,.btn:focus-visible,select:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:16px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.btn{font:700 15px var(--body);border-radius:10px;padding:11px 18px;border:2px solid var(--ink);background:var(--card);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.btn.primary{background:var(--teal);border-color:var(--teal);color:#fff}
+:root[data-theme="dark"] .btn.primary{color:#0F1524}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn.primary{color:#0F1524}}
+.btn.rec{background:var(--red);border-color:var(--red);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.dot{width:10px;height:10px;border-radius:50%;background:currentColor}
+.rec .dot{animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.25}}
+@media (prefers-reduced-motion: reduce){.rec .dot{animation:none}}
+.stage{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center}
+@media (max-width:560px){.stage{grid-template-columns:1fr}}
+.prompt{font:600 clamp(19px,3vw,23px)/1.35 var(--display)}
+.prompt.blur{filter:blur(7px);user-select:none}
+.timer{font:700 40px/1 var(--mono);font-variant-numeric:tabular-nums;text-align:center;min-width:130px;padding:12px 16px;border-radius:12px;background:var(--paper);border:1px solid var(--line)}
+.timer .lbl{display:block;font:700 11px var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.timer.prep{background:var(--amber-soft);border-color:var(--amber);color:var(--amber)}
+.timer.speak{background:var(--red-soft);border-color:var(--red);color:var(--red)}
+.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--teal);width:0;transition:width .25s linear}
+.transcript{min-height:64px;padding:12px 14px;border-radius:10px;background:var(--paper);border:1px dashed var(--line);font-size:17px}
+.transcript .interim{color:var(--muted)}
+textarea{width:100%;min-height:90px;font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px}
+.steps{display:flex;gap:6px;flex-wrap:wrap}
+.steps span{font:700 13px var(--mono);width:30px;height:30px;display:grid;place-items:center;border-radius:8px;border:1px solid var(--line);color:var(--muted)}
+.steps span.on{border-color:var(--teal);color:var(--teal);background:var(--teal-soft)}
+.steps span.done{background:var(--teal);border-color:var(--teal);color:var(--card)}
+.diff{font-size:18px;line-height:1.9}
+.diff .ok{color:var(--good);background:var(--good-soft);border-radius:4px;padding:1px 3px}
+.diff .miss{color:var(--red);background:var(--red-soft);border-radius:4px;padding:1px 3px;text-decoration:line-through}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.stat{padding:12px;border:1px solid var(--line);border-radius:10px}
+.stat b{display:block;font:700 24px var(--mono);font-variant-numeric:tabular-nums}
+.stat span{font-size:13px;color:var(--muted)}
+.chip{display:inline-block;font:700 12px var(--body);letter-spacing:.04em;padding:3px 9px;border-radius:999px}
+.chip.good{background:var(--good-soft);color:var(--good)}
+.chip.warn{background:var(--amber-soft);color:var(--amber)}
+.chip.bad{background:var(--red-soft);color:var(--red)}
+ul.tips{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.model{border-left:4px solid var(--teal);padding:4px 0 4px 14px;display:flex;flex-direction:column;gap:8px}
+.notice{padding:12px 14px;border-radius:10px;background:var(--amber-soft);color:var(--amber);font-size:14px}
+.hist{width:100%;border-collapse:collapse;font-size:14px}
+.hist td,.hist th{text-align:left;padding:8px;border-bottom:1px solid var(--line)}
+.hist td.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.tablewrap{overflow-x:auto}
+footer{font-size:13px;color:var(--muted)}
+.vcard{display:flex;flex-direction:column;gap:18px}
+.vword{font:800 clamp(30px,6vw,44px)/1.05 var(--display);letter-spacing:-.01em;overflow-wrap:anywhere}
+.vmeta{font:500 14px var(--mono);color:var(--muted);margin-top:4px}
+.vstep{display:flex;flex-direction:column;gap:10px;padding-top:16px;border-top:1px solid var(--line)}
+.vex{font-size:19px;line-height:1.5}
+.vex mark{background:var(--teal-soft);color:var(--ink);padding:0 3px;border-radius:4px;font-weight:700}
+.vko{font:700 19px var(--body)}
+.coll{font:700 14px var(--body);padding:7px 12px;border-radius:999px;border:1px solid var(--teal);background:var(--teal-soft);color:var(--ink);cursor:pointer}
+.coll:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+.register{display:flex;flex-direction:column;gap:6px}
+.rate .btn{flex:1 1 110px;justify-content:center;flex-direction:column;gap:0}
+.rate small{font:500 12px var(--mono);color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1><small>TOEFL iBT Speaking</small>TOEFL Voice Coach</h1>
+    <div class="settings">
+      <label for="voiceSel">Voice</label>
+      <select id="voiceSel"></select>
+      <label for="rate">Speed</label>
+      <input id="rate" type="range" min="0.7" max="1.2" step="0.05" value="0.95">
+    </div>
+  </header>
+
+  <div id="noMic" class="notice" hidden>
+    Your browser can't turn speech into text. For voice mode use <b>Chrome</b> (computer or Android) or <b>Safari</b> (iPhone, iPad, Mac). You can still listen to every question and type your answer below.<br>
+    <span class="ko">음성 인식은 Chrome(PC·안드로이드) 또는 Safari(아이폰·맥)에서 동작합니다. 아이폰은 설정 → 일반 → 키보드 → '받아쓰기'를 켜 주세요. 지금은 질문 듣기 + 타이핑으로 연습할 수 있어요.</span>
+  </div>
+
+  <nav role="tablist">
+    <button role="tab" data-tab="repeat" aria-selected="true">Listen &amp; Repeat</button>
+    <button role="tab" data-tab="interview" aria-selected="false">Take an Interview</button>
+    <button role="tab" data-tab="classic" aria-selected="false">Independent (Classic)</button>
+    <button role="tab" data-tab="vocab" aria-selected="false">Vocabulary</button>
+    <button role="tab" data-tab="history" aria-selected="false">My Progress</button>
+  </nav>
+
+  <!-- LISTEN & REPEAT -->
+  <section class="panel" id="tab-repeat">
+    <div class="row" style="justify-content:space-between">
+      <h2>Listen &amp; Repeat</h2>
+      <select id="repeatSet" aria-label="Choose a sentence set"></select>
+    </div>
+    <p>You hear a sentence once. Repeat it exactly. Sentences get longer as you go, like the real test (7 sentences per set).<br>
+    <span class="ko">문장을 한 번 듣고 똑같이 따라 말하세요. 뒤로 갈수록 문장이 길어집니다.</span></p>
+    <div class="steps" id="repeatSteps"></div>
+    <div class="stage">
+      <p class="prompt blur" id="repeatText">Press “Play sentence” to begin.</p>
+      <div class="timer" id="repeatTimer"><span class="lbl">Ready</span>--</div>
+    </div>
+    <div class="row">
+      <button class="btn primary" id="repeatPlay">▶ Play sentence</button>
+      <button class="btn" id="repeatStop" disabled><span class="dot"></span>Done speaking</button>
+      <button class="btn" id="repeatShow">Show text</button>
+      <button class="btn" id="repeatNext">Next →</button>
+    </div>
+    <div class="transcript" id="repeatHeard" aria-live="polite"><span class="interim">Your words will appear here.</span></div>
+    <textarea id="repeatType" placeholder="No microphone? Type what you heard, then press Check." hidden></textarea>
+    <button class="btn" id="repeatCheck" hidden>Check</button>
+    <div id="repeatResult" hidden class="panel" style="padding:14px"></div>
+  </section>
+
+  <!-- INTERVIEW -->
+  <section class="panel" id="tab-interview" hidden>
+    <div class="row" style="justify-content:space-between">
+      <h2>Take an Interview</h2>
+      <select id="interviewSet" aria-label="Choose an interview topic"></select>
+    </div>
+    <p>An interviewer asks 4 questions on one topic. There is no preparation time. Answer each one for up to <b>45 seconds</b>.<br>
+    <span class="ko">준비 시간 없이 바로 45초 동안 답하세요. 이유 + 구체적 예시를 꼭 넣으세요.</span></p>
+    <div class="steps" id="interviewSteps"></div>
+    <div class="stage">
+      <p class="prompt" id="interviewQ">Press “Ask me” to hear the first question.</p>
+      <div class="timer" id="interviewTimer"><span class="lbl">Ready</span>0:45</div>
+    </div>
+    <div class="bar"><i id="interviewBar"></i></div>
+    <div class="row">
+      <button class="btn primary" id="interviewAsk">▶ Ask me</button>
+      <button class="btn" id="interviewStop" disabled><span class="dot"></span>Stop</button>
+      <button class="btn" id="interviewNext">Next question →</button>
+    </div>
+    <div class="transcript" id="interviewHeard" aria-live="polite"><span class="interim">Your answer will appear here as you speak.</span></div>
+    <textarea id="interviewType" placeholder="No microphone? Type your answer here, then press Get feedback." hidden></textarea>
+    <button class="btn" id="interviewCheck" hidden>Get feedback</button>
+    <div id="interviewResult" hidden></div>
+  </section>
+
+  <!-- CLASSIC -->
+  <section class="panel" id="tab-classic" hidden>
+    <div class="row" style="justify-content:space-between">
+      <h2>Independent Speaking</h2>
+      <button class="btn" id="classicNew">New question</button>
+    </div>
+    <p>The classic TOEFL opinion task: <b>15 seconds</b> to prepare, then <b>45 seconds</b> to speak. Still great practice for organizing your ideas.<br>
+    <span class="ko">15초 준비, 45초 말하기. 의견 → 이유 1 + 예시 → 이유 2 + 예시 → 마무리.</span></p>
+    <div class="stage">
+      <p class="prompt" id="classicQ"></p>
+      <div class="timer" id="classicTimer"><span class="lbl">Ready</span>0:15</div>
+    </div>
+    <div class="bar"><i id="classicBar"></i></div>
+    <div class="row">
+      <button class="btn primary" id="classicStart">▶ Start (read + prep + speak)</button>
+      <button class="btn" id="classicStop" disabled><span class="dot"></span>Stop</button>
+    </div>
+    <div class="transcript" id="classicHeard" aria-live="polite"><span class="interim">Your answer will appear here as you speak.</span></div>
+    <textarea id="classicType" placeholder="No microphone? Type your answer here, then press Get feedback." hidden></textarea>
+    <button class="btn" id="classicCheck" hidden>Get feedback</button>
+    <div id="classicResult" hidden></div>
+  </section>
+
+  <!-- VOCABULARY -->
+  <section class="panel" id="tab-vocab" hidden>
+    <div class="row" style="justify-content:space-between">
+      <h2>Vocabulary, the native way</h2>
+      <select id="vocabDeck" aria-label="Choose a word deck"></select>
+    </div>
+    <p>Natives don't memorize word lists. They hear a word in a sentence, guess the meaning, and learn the words it goes with. Then they use it themselves.<br>
+    <span class="ko">① 문장 속에서 듣고 뜻 추측 → ② 뜻·짝꿍 표현(collocation) 확인 → ③ 소리 내어 발음 → ④ 내 문장 만들어 말하기 → ⑤ 기억 정도 체크 (복습 날짜 자동 설정)</span></p>
+    <div class="stats" id="vocabStats"></div>
+
+    <div id="vocabCard" class="vcard">
+      <div class="row" style="justify-content:space-between;align-items:baseline">
+        <div>
+          <div class="vword" id="vWord"></div>
+          <div class="vmeta" id="vMeta"></div>
+        </div>
+        <button class="btn" id="vHearWord">🔊 Word</button>
+      </div>
+
+      <div class="vstep">
+        <h3>1 · Hear it in context</h3>
+        <p class="vex" id="vEx"></p>
+        <div class="row">
+          <button class="btn primary" id="vHearEx">▶ Play sentence</button>
+          <button class="btn" id="vReveal">Show meaning</button>
+        </div>
+        <p class="ko" id="vGuess">Guess the meaning from the sentence first. 먼저 문장만 듣고 뜻을 추측해 보세요.</p>
+      </div>
+
+      <div class="vstep" id="vInfo" hidden>
+        <h3>2 · Meaning &amp; the words it goes with</h3>
+        <p class="vko" id="vKo"></p>
+        <div class="row" id="vColl"></div>
+        <p class="ko">Tap a phrase to hear it. 짝꿍 표현을 눌러 듣고 따라 말하세요.</p>
+        <div class="register">
+          <div><span class="chip warn">In conversation</span> <span id="vCasual"></span></div>
+          <div><span class="chip good">In academic English</span> <span id="vFormal"></span></div>
+        </div>
+        <p class="ko" id="vNote" hidden></p>
+      </div>
+
+      <div class="vstep">
+        <h3>3 · Say it</h3>
+        <div class="row">
+          <button class="btn" id="vSay"><span class="dot"></span>Say the word</button>
+          <span id="vSayRes" aria-live="polite"></span>
+        </div>
+      </div>
+
+      <div class="vstep">
+        <h3>4 · Use it in your own sentence</h3>
+        <p class="ko">Talk about your life, using one of the phrases above. 내 경험으로 문장을 만들어 말해 보세요.</p>
+        <div class="row">
+          <button class="btn" id="vUse"><span class="dot"></span>Speak a sentence</button>
+          <button class="btn" id="vUseStop" disabled>Done</button>
+        </div>
+        <div class="transcript" id="vUseHeard" aria-live="polite"><span class="interim">Your sentence will appear here.</span></div>
+        <textarea id="vUseType" placeholder="No microphone? Type your sentence here, then press Check." hidden></textarea>
+        <button class="btn" id="vUseCheck" hidden>Check</button>
+        <div id="vUseRes"></div>
+      </div>
+
+      <div class="vstep">
+        <h3>5 · How well do you know it?</h3>
+        <div class="row rate">
+          <button class="btn" data-rate="0">Again <small>now</small></button>
+          <button class="btn" data-rate="1">Hard <small>1 day</small></button>
+          <button class="btn" data-rate="2">Good <small id="goodDays"></small></button>
+          <button class="btn" data-rate="3">Easy <small id="easyDays"></small></button>
+        </div>
+      </div>
+    </div>
+    <div id="vocabDone" class="notice" hidden></div>
+  </section>
+
+  <!-- HISTORY -->
+  <section class="panel" id="tab-history" hidden>
+    <div class="row" style="justify-content:space-between">
+      <h2>My Progress</h2>
+      <button class="btn" id="histClear">Clear history</button>
+    </div>
+    <p class="ko">Saved only in this browser. 이 브라우저에만 저장됩니다.</p>
+    <div class="tablewrap"><table class="hist"><thead><tr><th>Date</th><th>Task</th><th>Result</th><th>Words</th><th>WPM</th></tr></thead><tbody id="histBody"></tbody></table></div>
+    <h3>How to score higher</h3>
+    <ul class="tips">
+      <li><b>Aim for 110–150 words per minute.</b> That is about 85–110 words in 45 seconds.</li>
+      <li><b>Answer first, then explain.</b> “I prefer X because…” in your first sentence.</li>
+      <li><b>Give one specific example.</b> A name, a place, a time: “Last semester, my roommate…”</li>
+      <li><b>Use linking words:</b> <i>because, for example, in addition, however, as a result, that's why</i>.</li>
+      <li><b>Cut fillers.</b> Replace “um / uh” with a short silent pause.</li>
+      <li><b>Keep talking until the timer ends.</b> Finishing early costs points for development.</li>
+    </ul>
+  </section>
+
+  <footer>Voice input uses your browser's built‑in speech recognition (Chrome / Edge). Scores here are practice estimates, not official ETS scores.</footer>
+</div>
+
+<script>
+/* ---------------- Content ---------------- */
+const REPEAT_SETS = [
+  { name: "Campus tour", items: [
+    "Welcome to the campus tour.",
+    "The library is open until midnight.",
+    "Please keep your student card with you.",
+    "The dining hall is on the second floor of this building.",
+    "If you get lost, ask anyone wearing a blue volunteer shirt.",
+    "Most first-year students live in the dormitories near the science center.",
+    "Before the semester starts, make sure you register for classes online through the student portal."
+  ]},
+  { name: "Science museum", items: [
+    "This way to the next exhibit.",
+    "Photos are allowed without a flash.",
+    "This fossil is over sixty million years old.",
+    "The planetarium show begins every hour on the hour.",
+    "Children under twelve must stay with an adult at all times.",
+    "The ocean gallery explains how whales communicate over long distances.",
+    "If you would like to learn more, our guided audio tour is available at the information desk for free."
+  ]},
+  { name: "Study group", items: [
+    "Let's meet at three.",
+    "Did you finish the reading?",
+    "I think the professor changed the deadline.",
+    "We should divide the project into four equal parts.",
+    "Could you send me your notes from yesterday's lecture?",
+    "The final presentation should be about fifteen minutes long, including questions.",
+    "Since the lab is closed on weekends, we need to collect all our data before Friday afternoon."
+  ]}
+];
+
+const INTERVIEW_SETS = [
+  { name: "Study habits", intro: "A researcher is asking students about how they study.", qs: [
+    { q: "Thanks for joining. First, can you tell me where you usually like to study, and why?",
+      m: "I usually study at a small café near my apartment. The main reason is that the background noise actually helps me focus. At home, I get distracted by my phone or by housework. For example, last month I had a big exam, and I went to the café every evening for a week. I finished all my review without wasting time, and I got one of my best scores." },
+    { q: "Some students prefer to study alone, while others prefer study groups. Which do you prefer?",
+      m: "I prefer studying alone for most subjects, because I can go at my own speed. In a group, people often chat and we lose time. However, for difficult subjects like statistics, a group is useful. When I didn't understand a formula, a friend explained it in a simple way. So I study alone first, and then meet a group to check difficult points." },
+    { q: "How has technology changed the way you study compared to a few years ago?",
+      m: "Technology has changed my studying a lot. A few years ago, I used only paper textbooks. Now, I use flashcard apps and online videos. For instance, I learn new English words with an app for ten minutes every morning on the bus. As a result, I study in small pieces every day instead of cramming, and I remember things much longer." },
+    { q: "Finally, what advice would you give to a new student who wants to study more effectively?",
+      m: "My advice is to make a simple schedule and review a little every day. Many new students wait until the night before an exam, and that causes stress. When I started university, I made the same mistake and my grades were low. After I began reviewing for thirty minutes every evening, my grades improved quickly. So consistency is more important than long hours." }
+  ]},
+  { name: "Technology & daily life", intro: "A researcher is studying how people use technology.", qs: [
+    { q: "To begin, how much time do you spend on your smartphone each day, and what do you use it for?",
+      m: "I spend about three hours a day on my smartphone. Mostly, I use it for messaging friends, reading news, and listening to podcasts while I commute. For example, every morning I listen to an English podcast on the subway. That way, my phone time is not only for fun, but it also helps me improve my listening skills." },
+    { q: "Do you think online shopping is better than shopping in physical stores?",
+      m: "In my opinion, online shopping is better for most things. It saves time, and it's easy to compare prices. For example, I recently bought a laptop online and saved almost one hundred dollars compared to the store price. However, for clothes and shoes I still prefer physical stores, because I want to try them on before I buy." },
+    { q: "Some people say technology makes us less social. Do you agree?",
+      m: "I partly disagree. Technology can make people less social when they look at their phones during meals. But it also helps us stay connected. For instance, my best friend moved to Canada two years ago, and we still video-call every weekend. Without technology, we would probably have lost touch. So I think it depends on how we use it." },
+    { q: "Lastly, what is one new technology you would like to see in the future, and why?",
+      m: "I would like to see real-time translation glasses. They would show subtitles when someone speaks another language. This would help travelers and international students a lot. When I first traveled to Japan, I couldn't read signs or talk to people at the station, and I felt lost. With these glasses, communication would be easier and people could understand each other's cultures better." }
+  ]},
+  { name: "City & community", intro: "A researcher is asking people about their neighborhood.", qs: [
+    { q: "Let's start with your neighborhood. What do you like most about the place where you live?",
+      m: "What I like most about my neighborhood is the park near my building. It's quiet and has a long walking path along a river. For example, after a stressful day, I go for a thirty-minute walk there and I feel much more relaxed. It's also a place where I often meet my neighbors, so it makes the area feel like a community." },
+    { q: "Should cities spend more money on public transportation or on building new roads?",
+      m: "I believe cities should spend more on public transportation. New roads often bring even more cars and traffic. Buses and subways move many people at once and cause less pollution. In my city, a new subway line opened last year, and my commute became twenty minutes shorter. Many of my friends also stopped driving to work because of it." },
+    { q: "Do you think young people should volunteer in their communities? Why or why not?",
+      m: "Yes, I think young people should volunteer. First, it teaches responsibility and teamwork. Second, it helps them understand people with different lives. In high school, I volunteered at a local library teaching elderly people how to use smartphones. I learned to be patient and explain things clearly, and those skills still help me in my part-time job today." },
+    { q: "Finally, if you could change one thing about your city, what would it be?",
+      m: "If I could change one thing, I would add more bicycle lanes. Right now, riding a bike in my city is dangerous because we share the road with cars. Last year, my friend was almost hit by a taxi. Safe bike lanes would encourage more people to cycle, which would reduce traffic and air pollution, and people would be healthier too." }
+  ]}
+];
+
+const CLASSIC = [
+  { q: "Some people prefer to live in a big city, while others prefer a small town. Which do you prefer and why?",
+    m: "I prefer living in a big city for two reasons. First, there are more job opportunities. For example, my cousin moved to Seoul and found a job in design within a month, which would be hard in a small town. Second, cities have more culture, like museums, concerts, and restaurants from around the world. On weekends I can try something new. That's why a big city suits me better." },
+  { q: "Do you agree or disagree: It is better to work in a team than to work alone?",
+    m: "I agree that working in a team is usually better. First, team members can share ideas, so the final result is more creative. In my marketing class, our group combined three different ideas into one campaign and got the highest grade. Second, work is divided, so each person has less pressure. Although teamwork needs good communication, the benefits are much greater." },
+  { q: "Some students like to take classes in the morning, while others prefer evening classes. Which do you prefer?",
+    m: "I prefer morning classes. First, my mind is fresh in the morning, so I can concentrate better. Last semester I had an 8 a.m. economics class, and it was my best grade. Second, if my classes end early, I have the whole afternoon to study, exercise, or work part-time. Evening classes would make my day feel too long and tiring." },
+  { q: "Is it better to save money for the future or to spend money to enjoy life now?",
+    m: "I think it's better to save most of your money for the future. Unexpected problems can happen at any time. For example, last year my laptop broke right before finals, and because I had savings, I bought a new one immediately. However, I also think it's important to spend a little on experiences, like trips with friends, so life doesn't become stressful." },
+  { q: "Describe a person who has had a big influence on your life. Explain why.",
+    m: "The person who influenced me most is my high school English teacher. She always encouraged us to speak, even when we made mistakes. For example, she started a weekly speaking club, and at first I was too nervous to say anything. After a few months, I gave a five-minute speech in front of the whole school. She taught me that confidence comes from practice." },
+  { q: "Do you agree or disagree: Students should be required to take physical education classes.",
+    m: "I agree that students should be required to take physical education. First, many students sit all day and don't exercise, which is bad for their health. Second, sports teach teamwork and discipline. In middle school, I joined basketball in PE class and made close friends I still see today. So PE classes are good for both the body and social skills." }
+];
+
+/* ---------------- Speech: output ---------------- */
+const synth = window.speechSynthesis;
+const voiceSel = document.getElementById("voiceSel");
+const rateEl = document.getElementById("rate");
+let voices = [];
+function loadVoices(){
+  if(!synth) return;
+  voices = synth.getVoices().filter(v => /^en[-_]/i.test(v.lang));
+  const saved = store.get("voice");
+  voiceSel.innerHTML = "";
+  voices.forEach((v,i) => {
+    const o = document.createElement("option");
+    o.value = i; o.textContent = `${v.name} (${v.lang})`;
+    voiceSel.append(o);
+  });
+  let idx = voices.findIndex(v => v.name === saved);
+  if(idx < 0) idx = voices.findIndex(v => /en-US/i.test(v.lang) && /Google|Natural|Samantha|Aria|Jenny/i.test(v.name));
+  if(idx < 0) idx = voices.findIndex(v => /en-US/i.test(v.lang));
+  if(idx >= 0) voiceSel.value = idx;
+}
+function speak(text){
+  return new Promise(resolve => {
+    if(!synth){ resolve(); return; }
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    const v = voices[+voiceSel.value]; if(v){ u.voice = v; u.lang = v.lang; } else u.lang = "en-US";
+    u.rate = +rateEl.value;
+    u.onend = u.onerror = () => resolve();
+    synth.speak(u);
+  });
+}
+function beep(){
+  try{
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.frequency.value = 880; g.gain.value = .12;
+    o.connect(g); g.connect(ctx.destination); o.start();
+    setTimeout(()=>{ o.stop(); ctx.close(); }, 220);
+  }catch(e){}
+}
+
+/* ---------------- Speech: input ---------------- */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+const hasSR = !!SR;
+if(!hasSR){
+  document.getElementById("noMic").hidden = false;
+  document.querySelectorAll("textarea:not([readonly]), #repeatCheck, #interviewCheck, #classicCheck, #vUseCheck").forEach(el => el.hidden = false);
+}
+/* A listener that keeps restarting until stopped (Chrome ends sessions after silence). */
+function makeListener(outEl){
+  let rec = null, finalText = "", active = false;
+  function render(interim){
+    outEl.innerHTML = "";
+    const f = document.createElement("span"); f.textContent = finalText;
+    const i = document.createElement("span"); i.className = "interim"; i.textContent = interim ? " " + interim : "";
+    outEl.append(f, i);
+    if(!finalText && !interim){ i.textContent = "Listening… start speaking."; }
+  }
+  function startRec(){
+    rec = new SR(); rec.lang = "en-US"; rec.continuous = true; rec.interimResults = true;
+    rec.onresult = e => {
+      let interim = "";
+      for(let k = e.resultIndex; k < e.results.length; k++){
+        const r = e.results[k];
+        if(r.isFinal) finalText = (finalText + " " + r[0].transcript).trim();
+        else interim += r[0].transcript;
+      }
+      render(interim);
+    };
+    rec.onerror = e => {
+      if(e.error === "not-allowed" || e.error === "service-not-allowed"){
+        active = false;
+        outEl.textContent = "Microphone blocked. Allow microphone access in your browser's address bar, then try again.";
+      }
+    };
+    rec.onend = () => { if(active){ try{ startRec(); }catch(err){} } };
+    rec.start();
+  }
+  return {
+    start(){ finalText = ""; active = true; render(""); try{ startRec(); }catch(e){} },
+    stop(){ active = false; try{ rec && rec.stop(); }catch(e){} return new Promise(r => setTimeout(() => r(finalText), 600)); },
+    get text(){ return finalText; }
+  };
+}
+
+/* ---------------- Helpers ---------------- */
+const store = {
+  get(k){ try{ return JSON.parse(localStorage.getItem("tvc_"+k)); }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem("tvc_"+k, JSON.stringify(v)); }catch(e){} }
+};
+const $ = id => document.getElementById(id);
+const words = s => (s||"").toLowerCase().replace(/[’']/g,"'").replace(/[^a-z0-9' -]/g," ").split(/[\s-]+/).filter(Boolean);
+const fmt = s => `${Math.floor(s/60)}:${String(Math.max(0,Math.ceil(s%60))).padStart(2,"0")}`;
+function esc(s){ const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+const NUMS = {one:"1",two:"2",three:"3",four:"4",five:"5",six:"6",seven:"7",eight:"8",nine:"9",ten:"10",twelve:"12",fifteen:"15",sixty:"60"};
+const norm = w => NUMS[w] || w.replace(/'s$/,"s");
+
+function countdown(seconds, timerEl, label, cls, barEl){
+  let stop = false, resolveFn;
+  const p = new Promise(res => {
+    resolveFn = res;
+    const end = Date.now() + seconds*1000;
+    timerEl.className = "timer " + cls;
+    const tick = () => {
+      const left = (end - Date.now())/1000;
+      timerEl.innerHTML = `<span class="lbl">${label}</span>${fmt(Math.max(0,left))}`;
+      if(barEl) barEl.style.width = (100 - Math.max(0,left)/seconds*100) + "%";
+      if(stop || left <= 0){ res(seconds - Math.max(0,left)); return; }
+      setTimeout(tick, 200);
+    };
+    tick();
+  });
+  return { promise: p, cancel(){ stop = true; } };
+}
+
+/* Word-level match of target vs spoken (LCS) */
+function compare(target, spoken){
+  const t = words(target), s = words(spoken).map(norm);
+  const tn = t.map(norm);
+  const dp = Array.from({length:t.length+1}, () => new Array(s.length+1).fill(0));
+  for(let i=t.length-1;i>=0;i--) for(let j=s.length-1;j>=0;j--)
+    dp[i][j] = tn[i]===s[j] ? dp[i+1][j+1]+1 : Math.max(dp[i+1][j], dp[i][j+1]);
+  const hit = new Array(t.length).fill(false);
+  let i=0,j=0;
+  while(i<t.length && j<s.length){
+    if(tn[i]===s[j]){ hit[i]=true; i++; j++; }
+    else if(dp[i+1][j] >= dp[i][j+1]) i++; else j++;
+  }
+  const origTokens = target.split(/\s+/);
+  return { tokens: origTokens, hit, score: t.length ? Math.round(hit.filter(Boolean).length / t.length * 100) : 0 };
+}
+
+const FILLERS = ["um","uh","er","erm","ah","like","you know","i mean","actually","basically","kind of","sort of"];
+const LINKERS = ["because","for example","for instance","in addition","also","however","although","as a result","so","that's why","first","second","finally","on the other hand","therefore","in my opinion","i believe","i think","such as","moreover","besides"];
+function countPhrase(text, p){ const re = new RegExp("\\b"+p.replace(/'/g,"'")+"\\b","gi"); return (text.match(re)||[]).length; }
+
+function analyze(text, seconds){
+  const w = words(text);
+  const lower = " " + w.join(" ") + " ";
+  const fillers = {};
+  FILLERS.forEach(f => { const c = countPhrase(lower, f); if(c && !(f==="like" && c<2)) fillers[f]=c; });
+  const fillerTotal = Object.values(fillers).reduce((a,b)=>a+b,0);
+  const linkUsed = LINKERS.filter(l => countPhrase(lower, l) > 0);
+  const unique = new Set(w).size;
+  const variety = w.length ? Math.round(unique / w.length * 100) : 0;
+  const secs = Math.max(seconds || 45, 5);
+  const wpm = Math.round(w.length / secs * 60);
+  const hasExample = /for example|for instance|when i|last (year|month|week|semester|summer)|once|my (friend|brother|sister|mother|father|roommate|cousin|teacher)/i.test(text);
+  let pts = 0;
+  pts += w.length >= 85 ? 2 : w.length >= 60 ? 1.5 : w.length >= 35 ? 1 : 0.5;
+  pts += linkUsed.length >= 4 ? 1 : linkUsed.length >= 2 ? .6 : .2;
+  pts += hasExample ? 1 : 0;
+  pts -= Math.min(1, fillerTotal * 0.15);
+  pts += variety >= 55 ? .5 : 0;
+  const band = Math.max(1, Math.min(4, Math.round(pts))); // 0–4 like the classic rubric
+  return { w, wpm, fillers, fillerTotal, linkUsed, variety, hasExample, band, count: w.length };
+}
+
+function feedbackHTML(a, question, answer, model){
+  const chip = (ok, warn) => ok ? "good" : warn ? "warn" : "bad";
+  const tips = [];
+  if(a.count < 60) tips.push("Your answer was short. Add one more reason or a longer example so you speak for the full 45 seconds.");
+  if(a.wpm && a.wpm < 100) tips.push("Try to speak a little faster and more smoothly. Target 110–150 words per minute.");
+  if(!a.hasExample) tips.push("Add a specific personal example: “For example, last semester I…”.");
+  if(a.linkUsed.length < 3) tips.push("Use more linking words (because, for example, in addition, as a result) to connect ideas.");
+  if(a.fillerTotal >= 3) tips.push(`You used ${a.fillerTotal} filler words (${Object.keys(a.fillers).join(", ")}). Pause silently instead.`);
+  if(!tips.length) tips.push("Strong structure. Next step: vary your vocabulary and keep your intonation lively.");
+  const prompt = `I'm practicing for the TOEFL iBT speaking section. Please grade my answer (TOEFL speaking rubric), correct my grammar, suggest better vocabulary, and give me an improved version I can practice aloud.\n\nQuestion: ${question}\n\nMy spoken answer (speech-to-text transcript): ${answer || "(empty)"}`;
+  const id = "m" + Math.random().toString(36).slice(2);
+  setTimeout(() => {
+    const copyBtn = document.getElementById(id+"c"), speakBtn = document.getElementById(id+"s"), ta = document.getElementById(id+"t");
+    copyBtn.onclick = async () => {
+      try{ await navigator.clipboard.writeText(prompt); copyBtn.textContent = "Copied ✓"; }
+      catch(e){ ta.hidden = false; ta.select(); copyBtn.textContent = "Select the text below and copy it"; }
+    };
+    speakBtn.onclick = () => speak(model);
+  });
+  return `
+  <div class="panel" style="padding:16px">
+    <div class="row" style="justify-content:space-between">
+      <h3>Your feedback</h3>
+      <span class="chip ${chip(a.band>=3,a.band==2)}">Practice estimate: ${a.band} / 4</span>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>${a.count}</b><span>words (goal 85+)</span></div>
+      <div class="stat"><b>${a.wpm}</b><span>words / minute (goal 110–150)</span></div>
+      <div class="stat"><b>${a.fillerTotal}</b><span>filler words (goal 0–2)</span></div>
+      <div class="stat"><b>${a.linkUsed.length}</b><span>linking words used</span></div>
+    </div>
+    <div class="row">
+      <span class="chip ${chip(a.hasExample)}">${a.hasExample ? "Specific example ✓" : "No clear example"}</span>
+      ${a.linkUsed.slice(0,8).map(l => `<span class="chip good">${esc(l)}</span>`).join("")}
+    </div>
+    <ul class="tips">${tips.map(t => `<li>${esc(t)}</li>`).join("")}</ul>
+    <div class="model">
+      <h3>Model answer (read it aloud, then try again)</h3>
+      <p>${esc(model)}</p>
+      <div class="row">
+        <button class="btn" id="${id}s">🔊 Listen to model answer</button>
+        <button class="btn" id="${id}c">Copy for Claude feedback</button>
+      </div>
+      <textarea id="${id}t" readonly hidden>${esc(prompt)}</textarea>
+      <p class="ko">Paste into Claude for grammar corrections and a detailed score. Claude에 붙여넣으면 문법 교정과 자세한 채점을 받을 수 있어요.</p>
+    </div>
+  </div>`;
+}
+
+function saveHistory(task, result, count, wpm){
+  const h = store.get("hist") || [];
+  h.unshift({ d: new Date().toISOString(), task, result, count, wpm });
+  store.set("hist", h.slice(0,100));
+}
+function renderHistory(){
+  const h = store.get("hist") || [];
+  $("histBody").innerHTML = h.length ? h.map(r => `<tr><td>${new Date(r.d).toLocaleString()}</td><td>${esc(r.task)}</td><td>${esc(r.result)}</td><td class="n">${r.count ?? "–"}</td><td class="n">${r.wpm ?? "–"}</td></tr>`).join("")
+    : `<tr><td colspan="5">No practice yet. Your results will show up here.</td></tr>`;
+}
+
+/* ---------------- Tabs ---------------- */
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("nav button").forEach(x => x.setAttribute("aria-selected", x===b));
+  ["repeat","interview","classic","vocab","history"].forEach(t => $("tab-"+t).hidden = t !== b.dataset.tab);
+  if(b.dataset.tab === "history") renderHistory();
+  if(b.dataset.tab === "vocab") vocabStart();
+  synth && synth.cancel();
+});
+
+/* ---------------- Listen & Repeat ---------------- */
+const R = { set: 0, idx: 0, listener: makeListener($("repeatHeard")), busy:false };
+REPEAT_SETS.forEach((s,i) => { const o = document.createElement("option"); o.value=i; o.textContent = s.name; $("repeatSet").append(o); });
+function repeatRender(){
+  const items = REPEAT_SETS[R.set].items;
+  $("repeatSteps").innerHTML = items.map((_,i) => `<span class="${i<R.idx?'done':i===R.idx?'on':''}">${i+1}</span>`).join("");
+  $("repeatText").textContent = items[R.idx];
+  $("repeatText").classList.add("blur");
+  $("repeatResult").hidden = true;
+  $("repeatHeard").innerHTML = `<span class="interim">Your words will appear here.</span>`;
+  $("repeatType").value = "";
+  $("repeatTimer").className = "timer"; $("repeatTimer").innerHTML = `<span class="lbl">Sentence</span>${R.idx+1}/7`;
+}
+function repeatGrade(spoken){
+  const target = REPEAT_SETS[R.set].items[R.idx];
+  const c = compare(target, spoken);
+  const cls = c.score >= 90 ? "good" : c.score >= 60 ? "warn" : "bad";
+  $("repeatText").classList.remove("blur");
+  $("repeatResult").hidden = false;
+  $("repeatResult").innerHTML = `
+    <div class="row" style="justify-content:space-between"><h3>Match</h3><span class="chip ${cls}">${c.score}% correct</span></div>
+    <p class="diff">${c.tokens.map((t,i) => `<span class="${c.hit[i]?'ok':'miss'}">${esc(t)}</span>`).join(" ")}</p>
+    <p class="ko">${c.score>=90 ? "Excellent! 아주 좋아요." : "Red words were missed or unclear. Press ▶ to hear it again and retry. 빨간 단어를 다시 연습하세요."}</p>`;
+  saveHistory("Listen & Repeat", `${REPEAT_SETS[R.set].name} #${R.idx+1}: ${c.score}%`, words(spoken).length, null);
+}
+$("repeatSet").onchange = () => { R.set = +$("repeatSet").value; R.idx = 0; repeatRender(); };
+$("repeatPlay").onclick = async () => {
+  if(R.busy) return; R.busy = true;
+  $("repeatPlay").disabled = true; $("repeatResult").hidden = true;
+  $("repeatTimer").className = "timer prep"; $("repeatTimer").innerHTML = `<span class="lbl">Listen</span>🔊`;
+  await speak(REPEAT_SETS[R.set].items[R.idx]);
+  R.busy = false; $("repeatPlay").disabled = false;
+  if(!hasSR){ $("repeatType").focus(); return; }
+  beep();
+  $("repeatTimer").className = "timer speak"; $("repeatTimer").innerHTML = `<span class="lbl">Your turn</span>🎙`;
+  R.listener.start();
+  $("repeatStop").disabled = false; $("repeatStop").classList.add("rec");
+  const words_n = words(REPEAT_SETS[R.set].items[R.idx]).length;
+  clearTimeout(R.auto);
+  R.auto = setTimeout(() => $("repeatStop").click(), Math.max(6000, words_n * 900));
+};
+$("repeatStop").onclick = async () => {
+  clearTimeout(R.auto);
+  $("repeatStop").disabled = true; $("repeatStop").classList.remove("rec");
+  const text = await R.listener.stop();
+  $("repeatTimer").className = "timer"; $("repeatTimer").innerHTML = `<span class="lbl">Sentence</span>${R.idx+1}/7`;
+  repeatGrade(text);
+};
+$("repeatCheck").onclick = () => repeatGrade($("repeatType").value);
+$("repeatShow").onclick = () => $("repeatText").classList.toggle("blur");
+$("repeatNext").onclick = () => { R.idx = (R.idx + 1) % 7; if(R.idx===0){ R.set = (R.set+1) % REPEAT_SETS.length; $("repeatSet").value = R.set; } repeatRender(); };
+
+/* ---------------- Interview ---------------- */
+const I = { set: 0, idx: 0, listener: makeListener($("interviewHeard")), timer: null };
+INTERVIEW_SETS.forEach((s,i) => { const o = document.createElement("option"); o.value=i; o.textContent = s.name; $("interviewSet").append(o); });
+function interviewRender(){
+  const s = INTERVIEW_SETS[I.set];
+  $("interviewSteps").innerHTML = s.qs.map((_,i) => `<span class="${i<I.idx?'done':i===I.idx?'on':''}">Q${i+1}</span>`).join("");
+  $("interviewSteps").querySelectorAll("span").forEach(x => x.style.width = "40px");
+  $("interviewQ").textContent = I.idx === 0 ? `${s.intro} Press “Ask me” to hear question 1.` : `Press “Ask me” to hear question ${I.idx+1}.`;
+  $("interviewResult").hidden = true;
+  $("interviewHeard").innerHTML = `<span class="interim">Your answer will appear here as you speak.</span>`;
+  $("interviewType").value = "";
+  $("interviewTimer").className = "timer"; $("interviewTimer").innerHTML = `<span class="lbl">Ready</span>0:45`;
+  $("interviewBar").style.width = "0";
+}
+async function interviewFinish(spokenSecs){
+  const item = INTERVIEW_SETS[I.set].qs[I.idx];
+  const text = hasSR ? await I.listener.stop() : $("interviewType").value;
+  $("interviewStop").disabled = true; $("interviewStop").classList.remove("rec");
+  $("interviewAsk").disabled = false;
+  $("interviewTimer").className = "timer"; $("interviewTimer").innerHTML = `<span class="lbl">Done</span>✓`;
+  const a = analyze(text, spokenSecs || 45);
+  $("interviewResult").innerHTML = feedbackHTML(a, item.q, text, item.m);
+  $("interviewResult").hidden = false;
+  saveHistory("Interview", `${INTERVIEW_SETS[I.set].name} Q${I.idx+1}: ${a.band}/4`, a.count, a.wpm);
+}
+$("interviewSet").onchange = () => { I.set = +$("interviewSet").value; I.idx = 0; interviewRender(); };
+$("interviewAsk").onclick = async () => {
+  const item = INTERVIEW_SETS[I.set].qs[I.idx];
+  $("interviewAsk").disabled = true; $("interviewResult").hidden = true;
+  $("interviewQ").textContent = item.q;
+  $("interviewTimer").className = "timer prep"; $("interviewTimer").innerHTML = `<span class="lbl">Listen</span>🔊`;
+  await speak((I.idx===0 ? INTERVIEW_SETS[I.set].intro + " " : "") + item.q);
+  if(!hasSR){ $("interviewAsk").disabled = false; $("interviewType").focus(); return; }
+  beep();
+  I.listener.start();
+  $("interviewStop").disabled = false; $("interviewStop").classList.add("rec");
+  I.timer = countdown(45, $("interviewTimer"), "Speak", "speak", $("interviewBar"));
+  const secs = await I.timer.promise;
+  interviewFinish(secs);
+};
+$("interviewStop").onclick = () => I.timer && I.timer.cancel();
+$("interviewCheck").onclick = () => interviewFinish(45);
+$("interviewNext").onclick = () => { I.idx = (I.idx + 1) % 4; if(I.idx===0){ I.set=(I.set+1)%INTERVIEW_SETS.length; $("interviewSet").value = I.set; } interviewRender(); };
+
+/* ---------------- Classic ---------------- */
+const C = { idx: Math.floor(Math.random()*CLASSIC.length), listener: makeListener($("classicHeard")), timer: null };
+function classicRender(){
+  $("classicQ").textContent = CLASSIC[C.idx].q;
+  $("classicResult").hidden = true;
+  $("classicHeard").innerHTML = `<span class="interim">Your answer will appear here as you speak.</span>`;
+  $("classicType").value = "";
+  $("classicTimer").className = "timer"; $("classicTimer").innerHTML = `<span class="lbl">Ready</span>0:15`;
+  $("classicBar").style.width = "0";
+}
+async function classicFinish(secs){
+  const item = CLASSIC[C.idx];
+  const text = hasSR ? await C.listener.stop() : $("classicType").value;
+  $("classicStop").disabled = true; $("classicStop").classList.remove("rec");
+  $("classicStart").disabled = false;
+  $("classicTimer").className = "timer"; $("classicTimer").innerHTML = `<span class="lbl">Done</span>✓`;
+  const a = analyze(text, secs || 45);
+  $("classicResult").innerHTML = feedbackHTML(a, item.q, text, item.m);
+  $("classicResult").hidden = false;
+  saveHistory("Independent", `${a.band}/4`, a.count, a.wpm);
+}
+$("classicNew").onclick = () => { C.idx = (C.idx + 1) % CLASSIC.length; classicRender(); };
+$("classicStart").onclick = async () => {
+  $("classicStart").disabled = true; $("classicResult").hidden = true;
+  $("classicTimer").className = "timer prep"; $("classicTimer").innerHTML = `<span class="lbl">Listen</span>🔊`;
+  await speak(CLASSIC[C.idx].q);
+  beep();
+  C.timer = countdown(15, $("classicTimer"), "Prepare", "prep", $("classicBar"));
+  $("classicStop").disabled = false;
+  await C.timer.promise;
+  beep();
+  if(!hasSR){ $("classicStop").disabled = true; $("classicStart").disabled = false; $("classicTimer").innerHTML = `<span class="lbl">Type</span>✍`; $("classicType").focus(); return; }
+  C.listener.start(); $("classicStop").classList.add("rec");
+  C.timer = countdown(45, $("classicTimer"), "Speak", "speak", $("classicBar"));
+  const secs = await C.timer.promise;
+  classicFinish(secs);
+};
+$("classicStop").onclick = () => C.timer && C.timer.cancel();
+$("classicCheck").onclick = () => classicFinish(45);
+
+/* ---------------- Vocabulary ---------------- */
+/* w: word, p: part of speech, s: stress (CAPS = stressed syllable), k: Korean meaning,
+   c: collocations natives use, e: example, ca: how people say it in conversation,
+   f: academic / formal alternative, n: usage note, fm: accepted forms for matching */
+const DECKS = [
+  { name: "TOEFL academic words", words: [
+    { w:"significant", p:"adj", s:"sig-NIF-i-cant", k:"중요한, 상당한", c:["a significant increase","play a significant role","significantly different"], e:"The new policy had a significant impact on small businesses.", ca:"a big deal / a lot", f:"significant, substantial" },
+    { w:"analyze", p:"verb", s:"AN-a-lyze", k:"분석하다", c:["analyze data","carefully analyze","analyze the results"], e:"The researchers analyzed data from over two thousand students.", ca:"look closely at, break down", f:"analyze, examine", n:"명사형 analysis (a-NAL-y-sis): 강세 위치가 바뀌어요.", fm:["analyz","analys"] },
+    { w:"approach", p:"noun / verb", s:"a-PROACH", k:"접근법; 다가가다", c:["take a different approach","a new approach to","approach a problem"], e:"We need to take a completely different approach to this problem.", ca:"a different way of doing it", f:"approach, method" },
+    { w:"assume", p:"verb", s:"a-SSUME", k:"가정하다, (사실이라고) 추정하다", c:["assume that","it's safe to assume","wrongly assume"], e:"It's safe to assume that most students check their phones during class.", ca:"guess, figure", f:"assume, presume", fm:["assum"] },
+    { w:"benefit", p:"noun / verb", s:"BEN-e-fit", k:"이익; 혜택을 받다", c:["benefit from","the benefits of","a major benefit"], e:"Students benefit from getting feedback right away.", ca:"the good thing about, helps", f:"benefit, advantage" },
+    { w:"contribute", p:"verb", s:"con-TRIB-ute", k:"기여하다; ~의 원인이 되다", c:["contribute to","contribute significantly to","contribute ideas"], e:"A lack of sleep can contribute to poor grades.", ca:"add to, help cause", f:"contribute to", n:"contribute to + 명사/동명사 (to 뒤에 동사원형 X)", fm:["contribut"] },
+    { w:"crucial", p:"adj", s:"CRU-cial", k:"결정적인, 매우 중요한", c:["play a crucial role","crucial for","absolutely crucial"], e:"Water plays a crucial role in controlling body temperature.", ca:"super important, key", f:"crucial, essential" },
+    { w:"decline", p:"noun / verb", s:"de-CLINE", k:"감소(하다); 거절하다", c:["a sharp decline in","steadily decline","decline an offer"], e:"There has been a sharp decline in bee populations.", ca:"drop, go down; say no", f:"decline, decrease", fm:["declin"] },
+    { w:"demonstrate", p:"verb", s:"DEM-on-strate", k:"입증하다, 보여주다", c:["clearly demonstrate","demonstrate that","demonstrate the ability to"], e:"The experiment clearly demonstrated that plants grow toward light.", ca:"show", f:"demonstrate, illustrate", fm:["demonstrat"] },
+    { w:"determine", p:"verb", s:"de-TER-mine", k:"결정하다, 알아내다", c:["determine whether","help determine","determine the cause of"], e:"Scientists are still trying to determine the cause of the problem.", ca:"figure out", f:"determine, identify", fm:["determin"] },
+    { w:"emerge", p:"verb", s:"e-MERGE", k:"나타나다, 드러나다", c:["emerge from","a pattern emerged","new evidence emerged"], e:"A clear pattern emerged from the data.", ca:"come out, show up", f:"emerge, arise", fm:["emerg"] },
+    { w:"enhance", p:"verb", s:"en-HANCE", k:"향상시키다, 높이다", c:["enhance performance","greatly enhance","enhance the experience"], e:"Some people think music can enhance their focus while studying.", ca:"make better, boost", f:"enhance, improve", fm:["enhanc"] },
+    { w:"evidence", p:"noun", s:"EV-i-dence", k:"증거, 근거", c:["strong evidence","evidence suggests that","there is little evidence"], e:"There is strong evidence that exercise improves memory.", ca:"proof", f:"evidence", n:"셀 수 없는 명사: an evidence (X) → a piece of evidence (O)" },
+    { w:"factor", p:"noun", s:"FAC-tor", k:"요인", c:["a key factor","a major factor in","several factors"], e:"Cost was a major factor in my decision.", ca:"reason, thing", f:"factor" },
+    { w:"hypothesis", p:"noun", s:"hy-POTH-e-sis", k:"가설", c:["test a hypothesis","support the hypothesis","the hypothesis that"], e:"The results supported the researchers' hypothesis.", ca:"an idea they wanted to test", f:"hypothesis, theory", n:"복수형 hypotheses (hy-POTH-e-sees)", fm:["hypothes"] },
+    { w:"impact", p:"noun / verb", s:"IM-pact", k:"영향(을 주다), 충격", c:["have an impact on","a huge impact","a negative impact"], e:"Social media has a huge impact on how teenagers see themselves.", ca:"effect, change", f:"impact, influence", n:"have an impact on (O) / have an impact to (X)" },
+    { w:"indicate", p:"verb", s:"IN-di-cate", k:"나타내다, 시사하다", c:["studies indicate that","clearly indicate","indicate a problem"], e:"Recent studies indicate that sleep affects learning.", ca:"show, suggest", f:"indicate, suggest", fm:["indicat"] },
+    { w:"maintain", p:"verb", s:"main-TAIN", k:"유지하다; 주장하다", c:["maintain a balance","maintain contact with","maintain that"], e:"It's hard to maintain a healthy balance between work and school.", ca:"keep", f:"maintain, sustain", n:"명사형 maintenance (MAIN-te-nance)", fm:["maintain","maintenanc"] },
+    { w:"perspective", p:"noun", s:"per-SPEC-tive", k:"관점, 시각", c:["from my perspective","a whole new perspective","put things in perspective"], e:"Living abroad gave me a whole new perspective on life.", ca:"point of view, the way I see it", f:"perspective, viewpoint" },
+    { w:"phenomenon", p:"noun", s:"phe-NOM-e-non", k:"현상", c:["a natural phenomenon","a common phenomenon","this phenomenon"], e:"Bird migration is a fascinating natural phenomenon.", ca:"something that happens", f:"phenomenon", n:"복수형 phenomena", fm:["phenomen"] },
+    { w:"promote", p:"verb", s:"pro-MOTE", k:"촉진하다; 승진시키다; 홍보하다", c:["promote health","promote growth","get promoted"], e:"Regular exercise promotes better sleep.", ca:"help, encourage", f:"promote, foster", fm:["promot"] },
+    { w:"reluctant", p:"adj", s:"re-LUC-tant", k:"(~하기를) 꺼리는", c:["reluctant to ask","somewhat reluctant","a reluctant decision"], e:"Many students are reluctant to ask questions in class.", ca:"don't really want to", f:"reluctant, unwilling", n:"be reluctant to + 동사원형", fm:["reluctan"] },
+    { w:"subsequent", p:"adj", s:"SUB-se-quent", k:"그 다음의, 이후의", c:["in subsequent years","subsequent studies","subsequently"], e:"Subsequent studies found very similar results.", ca:"later, after that", f:"subsequent, following" },
+    { w:"sustain", p:"verb", s:"sus-TAIN", k:"지속시키다, 유지하다", c:["sustain growth","sustain interest","hard to sustain"], e:"It's hard to sustain motivation over a long semester.", ca:"keep going, keep up", f:"sustain, maintain", n:"형용사 sustainable (지속 가능한)" },
+    { w:"undergo", p:"verb", s:"un-der-GO", k:"(변화 등을) 겪다", c:["undergo changes","undergo surgery","undergo a transformation"], e:"The city underwent huge changes in the 1990s.", ca:"go through", f:"undergo, experience", fm:["undergo","underwent","undergone","undergoing"] }
+  ]},
+  { name: "Phrasal verbs natives use", words: [
+    { w:"come up with", p:"phrasal verb", s:"come UP with", k:"(아이디어·계획을) 생각해내다", c:["come up with an idea","come up with a plan","come up with a solution"], e:"Our group came up with a great idea for the project.", ca:"come up with", f:"devise, develop", fm:["come up with","came up with","coming up with","comes up with"] },
+    { w:"figure out", p:"phrasal verb", s:"figure OUT", k:"알아내다, 이해하다", c:["figure out how to","figure out the answer","figure it out"], e:"I finally figured out how to solve the problem.", ca:"figure out", f:"determine, work out", n:"대명사는 가운데: figure it out (O) / figure out it (X)", fm:["figure out","figured out","figuring out","figures out","figure it out","figured it out"] },
+    { w:"end up", p:"phrasal verb", s:"end UP", k:"결국 ~하게 되다", c:["end up doing","end up in","end up with"], e:"I didn't plan to study biology, but I ended up loving it.", ca:"end up", f:"eventually, in the end", n:"end up + -ing: ended up loving (O) / ended up to love (X)", fm:["end up","ended up","ending up","ends up"] },
+    { w:"run into", p:"phrasal verb", s:"run IN-to", k:"(문제에) 부딪히다; 우연히 만나다", c:["run into a problem","run into trouble","run into an old friend"], e:"We ran into a problem with the lab equipment.", ca:"run into", f:"encounter", fm:["run into","ran into","running into","runs into"] },
+    { w:"look into", p:"phrasal verb", s:"look IN-to", k:"조사하다, 알아보다", c:["look into the issue","look into it","I'll look into it"], e:"The university is looking into the students' complaint.", ca:"look into, check out", f:"investigate, examine", fm:["look into","looked into","looking into","looks into"] },
+    { w:"point out", p:"phrasal verb", s:"point OUT", k:"지적하다, 짚어 말하다", c:["point out that","point out a mistake","as you pointed out"], e:"My professor pointed out a small mistake in my essay.", ca:"point out, mention", f:"note, indicate", fm:["point out","pointed out","pointing out","points out"] },
+    { w:"turn out", p:"phrasal verb", s:"turn OUT", k:"~로 판명되다, 알고 보니 ~이다", c:["it turns out that","turn out to be","as it turned out"], e:"It turned out that the test was much easier than I expected.", ca:"turns out…", f:"prove to be", fm:["turn out","turned out","turning out","turns out"] },
+    { w:"carry out", p:"phrasal verb", s:"carry OUT", k:"수행하다, 실행하다", c:["carry out research","carry out an experiment","carry out a plan"], e:"The team carried out an experiment on sleep and memory.", ca:"do, run", f:"conduct, perform", fm:["carry out","carried out","carrying out","carries out"] },
+    { w:"put off", p:"phrasal verb", s:"put OFF", k:"미루다, 연기하다", c:["put off doing","put it off","keep putting it off"], e:"Don't put off your assignment until the last minute.", ca:"put off", f:"postpone, delay", n:"put off + -ing: put off studying", fm:["put off","putting off","puts off","put it off"] },
+    { w:"get used to", p:"phrase", s:"get USED to", k:"~에 익숙해지다", c:["get used to living","get used to it","be used to"], e:"It took me a month to get used to living alone.", ca:"get used to", f:"adjust to, adapt to", n:"used to + -ing (익숙함) vs used to + 동사원형 (과거 습관)", fm:["get used to","got used to","getting used to","gets used to","gotten used to","be used to","am used to","was used to"] },
+    { w:"keep up with", p:"phrasal verb", s:"keep UP with", k:"(뒤처지지 않고) 따라가다", c:["keep up with the class","keep up with the news","hard to keep up with"], e:"It's hard to keep up with all the reading in this course.", ca:"keep up", f:"stay current with", fm:["keep up with","kept up with","keeping up with","keeps up with","keep up"] },
+    { w:"deal with", p:"phrasal verb", s:"DEAL with", k:"다루다, 처리하다, 대처하다", c:["deal with stress","deal with a problem","hard to deal with"], e:"Everyone deals with stress in different ways.", ca:"deal with, handle", f:"cope with, address", fm:["deal with","dealt with","dealing with","deals with"] },
+    { w:"go over", p:"phrasal verb", s:"go O-ver", k:"검토하다, 복습하다", c:["go over the notes","go over it again","go over the answers"], e:"Can we go over the answers before the exam?", ca:"go over", f:"review", fm:["go over","went over","going over","goes over","gone over"] },
+    { w:"bring up", p:"phrasal verb", s:"bring UP", k:"(화제를) 꺼내다", c:["bring up a topic","bring up a good point","bring it up"], e:"She brought up an interesting point during the discussion.", ca:"bring up, mention", f:"raise, mention", fm:["bring up","brought up","bringing up","brings up","bring it up","brought it up"] },
+    { w:"stand out", p:"phrasal verb", s:"stand OUT", k:"눈에 띄다, 두드러지다", c:["stand out from","really stand out","make you stand out"], e:"Her presentation really stood out from the others.", ca:"stand out", f:"be distinctive", fm:["stand out","stood out","standing out","stands out"] },
+    { w:"cut down on", p:"phrasal verb", s:"cut DOWN on", k:"(양을) 줄이다", c:["cut down on sugar","cut down on screen time","cut down on coffee"], e:"I'm trying to cut down on coffee during exam week.", ca:"cut down on, cut back on", f:"reduce", fm:["cut down on","cutting down on","cuts down on","cut back on"] }
+  ]}
+];
+const DAY = 86400000;
+const INTERVALS = [0, 1, 3, 7, 14, 30, 60]; // days per box
+const NEW_PER_DAY = 10;
+const V = { deck: 0, queue: [], cur: null, sayListener: makeListener(document.createElement("div")), useListener: makeListener($("vUseHeard")), sayTimer: null };
+
+function vKey(item){ return DECKS[V.deck].name + "|" + item.w; }
+function vProg(){ return store.get("vocab") || {}; }
+function vMatch(text, item){
+  const t = " " + words(text).join(" ") + " ";
+  const forms = item.fm || [item.w.replace(/(e|y)$/, "")];
+  return forms.some(f => new RegExp("\\b" + f.toLowerCase().replace(/[^a-z' ]/g,"") + (f.includes(" ") ? "\\b" : "[a-z']*\\b")).test(t));
+}
+function vBuildQueue(){
+  const p = vProg(), now = Date.now(), list = DECKS[V.deck].words;
+  const due = list.filter(it => p[vKey(it)] && p[vKey(it)].due <= now).sort((a,b) => p[vKey(a)].due - p[vKey(b)].due);
+  const today = new Date().toDateString();
+  const introduced = (store.get("vocabNew") || {});
+  const usedToday = introduced.d === today ? (introduced.n || 0) : 0;
+  const fresh = list.filter(it => !p[vKey(it)]).slice(0, Math.max(0, NEW_PER_DAY - usedToday));
+  V.queue = [...due, ...fresh];
+}
+function vRenderStats(){
+  const p = vProg(), now = Date.now(), list = DECKS[V.deck].words;
+  const seen = list.filter(it => p[vKey(it)]);
+  const due = seen.filter(it => p[vKey(it)].due <= now).length;
+  const learned = seen.filter(it => p[vKey(it)].box >= 3).length;
+  $("vocabStats").innerHTML = `
+    <div class="stat"><b>${V.queue.length}</b><span>cards left today</span></div>
+    <div class="stat"><b>${due}</b><span>due for review</span></div>
+    <div class="stat"><b>${learned}/${list.length}</b><span>words learned (7+ days)</span></div>`;
+}
+function vShow(){
+  vRenderStats();
+  const item = V.cur = V.queue[0];
+  $("vocabCard").hidden = !item; $("vocabDone").hidden = !!item;
+  if(!item){
+    $("vocabDone").innerHTML = `All done for today in this deck. Come back tomorrow for your reviews, or switch decks.<br><span class="ko">오늘 학습 완료! 내일 복습 카드가 다시 나타납니다.</span>`;
+    return;
+  }
+  $("vWord").textContent = item.w;
+  $("vMeta").textContent = `${item.p} · ${item.s}`;
+  const re = new RegExp("(" + (item.fm || [item.w.replace(/(e|y)$/, "")]).map(f => f.replace(/[^a-zA-Z' ]/g,"")).sort((a,b)=>b.length-a.length).join("|") + ")([a-z']*)", "i");
+  $("vEx").innerHTML = esc(item.e).replace(re, "<mark>$1$2</mark>");
+  $("vKo").textContent = item.k;
+  $("vColl").innerHTML = "";
+  item.c.forEach(c => { const b = document.createElement("button"); b.className = "coll"; b.textContent = "🔊 " + c; b.onclick = () => speak(c); $("vColl").append(b); });
+  $("vCasual").textContent = item.ca;
+  $("vFormal").textContent = item.f;
+  $("vNote").hidden = !item.n; $("vNote").textContent = item.n ? "💡 " + item.n : "";
+  $("vInfo").hidden = true; $("vGuess").hidden = false; $("vReveal").hidden = false;
+  $("vSayRes").textContent = "";
+  $("vUseHeard").innerHTML = `<span class="interim">Your sentence will appear here.</span>`;
+  $("vUseType").value = ""; $("vUseRes").innerHTML = "";
+  const box = (vProg()[vKey(item)] || {box:0}).box;
+  $("goodDays").textContent = INTERVALS[Math.min(box+1, INTERVALS.length-1)] + " days";
+  $("easyDays").textContent = INTERVALS[Math.min(box+2, INTERVALS.length-1)] + " days";
+}
+function vocabStart(){ vBuildQueue(); vShow(); }
+function vReveal(){ $("vInfo").hidden = false; $("vGuess").hidden = true; $("vReveal").hidden = true; }
+
+DECKS.forEach((d,i) => { const o = document.createElement("option"); o.value = i; o.textContent = d.name; $("vocabDeck").append(o); });
+$("vocabDeck").onchange = () => { V.deck = +$("vocabDeck").value; store.set("vocabDeck", V.deck); vocabStart(); };
+$("vHearWord").onclick = () => speak(V.cur.w);
+$("vHearEx").onclick = () => speak(V.cur.e);
+$("vReveal").onclick = () => { vReveal(); speak(V.cur.c[0]); };
+
+if(!hasSR){ $("vSay").hidden = true; $("vSayRes").textContent = "Listen with 🔊 Word and repeat it out loud 3 times. 🔊 버튼을 듣고 3번 따라 말하세요."; $("vUse").hidden = true; $("vUseStop").hidden = true; }
+$("vSay").onclick = async () => {
+  const btn = $("vSay");
+  if(btn.classList.contains("rec")) return;
+  btn.classList.add("rec"); $("vSayRes").textContent = "Listening…";
+  V.sayListener.start();
+  await new Promise(r => setTimeout(r, 3500));
+  const heard = await V.sayListener.stop();
+  btn.classList.remove("rec");
+  const ok = vMatch(heard, V.cur);
+  $("vSayRes").innerHTML = `<span class="chip ${ok ? "good" : "bad"}">${ok ? "Clear ✓" : "Try again"}</span> I heard: “${esc(heard || "nothing")}”` +
+    (ok ? "" : ` <span class="ko">강세(${esc(V.cur.s)})를 살려 또렷하게 말해 보세요.</span>`);
+};
+
+async function vCheckUse(text){
+  const item = V.cur, w = words(text);
+  const used = vMatch(text, item);
+  const coll = item.c.find(c => (" " + w.join(" ") + " ").includes(" " + words(c).slice(0, 2).join(" ") + " "));
+  const long = w.length >= 7;
+  const cls = used && long ? "good" : used ? "warn" : "bad";
+  const msg = !used ? `I didn't hear “${item.w}”. Try again and say it clearly.`
+    : !long ? "Good! Now make it longer. Add why, when, or where (7+ words)."
+    : coll ? "Great! You used a natural collocation." : "Nice sentence. Try again with one of the phrases above to sound more native.";
+  const prompt = `I'm learning English vocabulary for the TOEFL. Is this sentence natural for a native speaker? Correct it if needed, explain briefly, and give me 2 more natural example sentences with "${item.w}".\n\nMy sentence: ${text}`;
+  $("vUseRes").innerHTML = `<div class="row"><span class="chip ${cls}">${used ? (long ? "Well used ✓" : "Used ✓") : "Word missing"}</span><span>${esc(msg)}</span></div>
+    <div class="row" style="margin-top:8px"><button class="btn" id="vCopy">Ask Claude: is it natural?</button></div>
+    <textarea id="vCopyTxt" readonly hidden></textarea>`;
+  $("vCopyTxt").value = prompt;
+  $("vCopy").onclick = async () => {
+    try{ await navigator.clipboard.writeText(prompt); $("vCopy").textContent = "Copied ✓ Paste it to Claude"; }
+    catch(e){ $("vCopyTxt").hidden = false; $("vCopyTxt").select(); $("vCopy").textContent = "Select the text below and copy it"; }
+  };
+  if(used) vReveal();
+}
+$("vUse").onclick = () => {
+  $("vUse").disabled = true; $("vUse").classList.add("rec"); $("vUseStop").disabled = false; $("vUseRes").innerHTML = "";
+  V.useListener.start();
+};
+$("vUseStop").onclick = async () => {
+  $("vUseStop").disabled = true;
+  const text = await V.useListener.stop();
+  $("vUse").disabled = false; $("vUse").classList.remove("rec");
+  vCheckUse(text);
+};
+$("vUseCheck").onclick = () => vCheckUse($("vUseType").value);
+
+document.querySelectorAll(".rate .btn").forEach(b => b.onclick = () => {
+  const item = V.cur; if(!item) return;
+  const rate = +b.dataset.rate, p = vProg(), k = vKey(item);
+  if(!p[k]){
+    const today = new Date().toDateString(), n = store.get("vocabNew") || {};
+    store.set("vocabNew", { d: today, n: (n.d === today ? n.n || 0 : 0) + 1 });
+  }
+  const box = (p[k] || {box:0}).box;
+  const nb = rate === 0 ? 0 : rate === 1 ? Math.max(1, box) : Math.min(box + rate - 1, INTERVALS.length - 1);
+  const days = rate === 1 ? 1 : INTERVALS[nb];
+  p[k] = { box: nb, due: Date.now() + days * DAY };
+  store.set("vocab", p);
+  V.queue.shift();
+  if(rate === 0) V.queue.splice(Math.min(3, V.queue.length), 0, item); // see it again in a few cards
+  if(rate > 0) saveHistory("Vocabulary", `${item.w}: ${["Again","Hard","Good","Easy"][rate]}`, null, null);
+  synth && synth.cancel();
+  vShow();
+});
+
+/* ---------------- Init ---------------- */
+V.deck = Math.min(+(store.get("vocabDeck") || 0), DECKS.length - 1); $("vocabDeck").value = V.deck;
+$("histClear").onclick = () => { store.set("hist", []); renderHistory(); };
+voiceSel.onchange = () => { const v = voices[+voiceSel.value]; v && store.set("voice", v.name); };
+const savedRate = store.get("rate"); if(savedRate) rateEl.value = savedRate;
+rateEl.onchange = () => store.set("rate", rateEl.value);
+if(synth){ loadVoices(); synth.onvoiceschanged = loadVoices; }
+repeatRender(); interviewRender(); classicRender();
+</script>
+</body>
+</html>
