@@ -38,8 +38,18 @@ p{margin:0}
 .ko{color:var(--muted);font-size:14px}
 .top{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .icon{font:700 20px var(--body);width:46px;height:46px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
-.tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:4px;gap:4px}
-.tabs button{font:700 16px var(--body);border:0;border-radius:10px;padding:12px;background:none;color:var(--muted)}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);background:var(--card);border:1px solid var(--line);border-radius:14px;padding:4px;gap:4px}
+.tabs button{font:700 15px var(--body);border:0;border-radius:10px;padding:12px 4px;background:none;color:var(--muted);white-space:nowrap}
+.native-box{display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:14px;background:var(--teal-soft)}
+.nat{display:flex;flex-direction:column;gap:6px;padding-top:10px;border-top:1px solid var(--line)}
+.nat:first-of-type{border-top:0;padding-top:0}
+.nat .said,.said{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--red)}
+.nat .native,.native{font:700 18px/1.4 var(--display);color:var(--ink)}
+.nat .row .btn{width:auto;min-height:40px;padding:6px 12px;font-size:14px}
+.use{font:700 11px var(--body);letter-spacing:.06em;color:var(--muted)}
+.plist{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.plist div{flex:1;min-width:0;overflow-wrap:anywhere}
+.plist button{flex:none;width:44px;height:44px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:15px}
 .tabs button[aria-selected="true"]{background:var(--teal);color:var(--on-teal)}
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:14px}
 .label{font:700 12px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
@@ -149,6 +159,7 @@ select{font:inherit;color:var(--ink);background:var(--paper);border:1px solid va
   <div class="tabs" role="tablist">
     <button role="tab" id="tabS" aria-selected="true">🎙 Speaking</button>
     <button role="tab" id="tabV" aria-selected="false">📚 Words</button>
+    <button role="tab" id="tabP" aria-selected="false">🔖 Phrases</button>
   </div>
 
   <!-- SPEAKING -->
@@ -202,6 +213,39 @@ select{font:inherit;color:var(--ink);background:var(--paper);border:1px solid va
         <button class="btn primary" id="vGood">Got it ✓</button>
       </div>
     </div>
+  </section>
+
+  <!-- PHRASES -->
+  <section id="phr" class="card" hidden>
+    <div>
+      <span class="label">My native phrases</span>
+      <p class="ko">Mia가 알려준 "원어민 표현"을 저장해서 입에 붙을 때까지 연습해요. 어색했던 내 문장을 보고, 원어민처럼 먼저 말해 본 다음 정답을 확인하세요.</p>
+    </div>
+    <span class="label" id="pCount"></span>
+    <div id="pCard" style="display:flex;flex-direction:column;gap:12px">
+      <div id="pSaidBox">
+        <span class="label">You said</span>
+        <p class="said" id="pSaid"></p>
+      </div>
+      <p class="q" style="font-size:18px">How would a native say it?<br><span class="ko">원어민이라면 어떻게 말할까요?</span></p>
+      <textarea id="pTry" style="min-height:80px" placeholder="🎤 Say the native version out loud…"></textarea>
+      <button class="btn" id="pShow">Show the native way</button>
+      <div id="pAns" hidden style="display:flex;flex-direction:column;gap:10px">
+        <div id="pMatch"></div>
+        <p class="better native" id="pNative"></p>
+        <p class="ko" id="pWhy"></p>
+        <button class="btn" id="pHear">🔊 Listen &amp; repeat 3 times</button>
+      </div>
+      <div class="two">
+        <button class="btn" id="pAgain">Again</button>
+        <button class="btn primary" id="pGood">Got it ✓</button>
+      </div>
+    </div>
+    <p class="ko" id="pEmpty" hidden></p>
+    <details id="pAll">
+      <summary class="label" id="pAllSum">All saved phrases</summary>
+      <div id="pList" style="display:flex;flex-direction:column;margin-top:8px"></div>
+    </details>
   </section>
 
   <p class="ko">Levels follow CEFR (A2–C1), roughly matching the TOEFL iBT 1–6 score bands. Practice scores are estimates, not official ETS scores. 진행 상황은 이 기기에만 저장돼요.</p>
@@ -458,11 +502,54 @@ $("lvUpBtn").onclick = () => setLevel(Math.min(level + 1, LEVELS.length - 1), tr
 function tab(which){
   $("tabS").setAttribute("aria-selected", which === "s");
   $("tabV").setAttribute("aria-selected", which === "v");
-  $("speak").hidden = which !== "s"; $("words").hidden = which !== "v";
+  $("tabP").setAttribute("aria-selected", which === "p");
+  $("speak").hidden = which !== "s"; $("words").hidden = which !== "v"; $("phr").hidden = which !== "p";
+  if(which === "p"){ buildPQueue(); pRender(); }
   synth && synth.cancel();
   store.set("tab", which);
 }
-$("tabS").onclick = () => tab("s"); $("tabV").onclick = () => tab("v");
+$("tabS").onclick = () => tab("s"); $("tabV").onclick = () => tab("v"); $("tabP").onclick = () => tab("p");
+
+/* ================= NATIVE UPGRADE (shared) ================= */
+const phrases = () => store.get("phrases") || [];
+function savePhrase(ph){
+  const list = phrases();
+  const key = s => words(s).join(" ");
+  if(list.some(x => key(x.native) === key(ph.native))) { toast("Already saved 🔖"); return false; }
+  list.unshift({ id: Date.now().toString(36) + Math.random().toString(36).slice(2,6), said: ph.said || "", native: ph.native, why: ph.why || "", use: ph.use || "", box: -1, due: Date.now(), added: Date.now() });
+  store.set("phrases", list.slice(0, 300));
+  updatePhraseTab();
+  toast("Saved to My phrases 🔖");
+  return true;
+}
+function updatePhraseTab(){
+  const now = Date.now(), due = phrases().filter(x => x.due <= now).length;
+  $("tabP").textContent = due ? `🔖 Phrases (${due})` : "🔖 Phrases";
+}
+const USE = { daily: "🏠 DAILY", toefl: "🏫 TOEFL", both: "🏠🏫 DAILY + TOEFL" };
+/* Renders "correct but textbook → how natives say it" cards with listen + save buttons. */
+function nativeHTML(list){
+  if(!list || !list.length) return "";
+  return `<div class="native-box">
+    <span class="label">🗣 Native upgrade · 원어민은 이렇게 말해요</span>
+    ${list.map((n, i) => `<div class="nat">
+      ${n.use && USE[n.use] ? `<span class="use">${USE[n.use]}</span>` : ""}
+      ${n.said ? `<span class="said">${esc(n.said)}</span>` : ""}
+      <span class="native">${esc(n.native)}</span>
+      <span class="ko">${esc(n.why_ko)}</span>
+      <div class="row"><button class="btn" data-hear="${i}">🔊 Listen</button><button class="btn" data-save="${i}">🔖 Save</button></div>
+    </div>`).join("")}
+  </div>`;
+}
+function wireNative(root, list){
+  root.querySelectorAll("[data-hear]").forEach(b => b.onclick = () => speak(list[+b.dataset.hear].native));
+  root.querySelectorAll("[data-save]").forEach(b => b.onclick = () => {
+    const n = list[+b.dataset.save];
+    savePhrase({ said: n.said, native: n.native, why: n.why_ko, use: n.use });
+    b.textContent = "✓ Saved"; b.disabled = true;
+  });
+}
+const NATIVE_RULE = `"native": up to 3 items. Pick phrases from their answer that are grammatically OK (or nearly) but sound textbook, stiff, or unnatural, and show exactly how a native speaker would naturally say the same thing. Use natural spoken English that works in daily conversation and is still appropriate for a TOEFL answer (no slang or rude words). Prefer common chunks, phrasal verbs and collocations. Each item: {"said": "exact phrase from the answer", "native": "the natural native version (a short phrase or one sentence)", "why_ko": "뉘앙스 차이를 쉽게 설명 (한국어, 1문장)", "use": "daily" | "toefl" | "both"}. If everything already sounds natural, give 1 item that shows an even more native way to say one of their ideas.`;
 
 /* ================= SPEAKING ================= */
 let S = { i: 0, timer: null, end: 0 };
@@ -517,8 +604,10 @@ Answer: ${ans}
 Grade it with the TOEFL speaking rubric from 0 to 4, judging language use and topic development only (you can't hear delivery). Be fair but kind, and grade relative to what a ${L.cefr} learner should aim for.
 
 Reply with only JSON in this shape:
-{"score": 3, "cefr": "B1", "cheer": "1-2 short, bright, natural spoken English sentences praising something SPECIFIC in their answer, the way an excited friend would say it out loud. No emojis.", "summary_ko": "따뜻하고 긍정적인 한국어 총평 1-2문장 (친근한 존댓말, 칭찬 먼저)", "fixes": [{"wrong": "exact phrase from the answer", "right": "corrected phrase", "why_ko": "짧고 쉬운 설명"}], "better": "an upgraded version of THEIR answer that keeps their ideas, written at about ${nextL.cefr} level in natural spoken English, ${L.goal}-${L.goal+25} words", "tip_ko": "다음에 바로 써먹을 팁 하나 (긍정적으로)"}
-Give at most ${level < 2 ? 3 : 4} fixes, the most important first. If there are no errors, fixes is [].`;
+{"score": 3, "cefr": "B1", "cheer": "1-2 short, bright, natural spoken English sentences praising something SPECIFIC in their answer, the way an excited friend would say it out loud. No emojis.", "summary_ko": "따뜻하고 긍정적인 한국어 총평 1-2문장 (친근한 존댓말, 칭찬 먼저)", "fixes": [{"wrong": "exact phrase from the answer", "right": "corrected phrase", "why_ko": "짧고 쉬운 설명"}], "native": [{"said": "...", "native": "...", "why_ko": "...", "use": "both"}], "better": "an upgraded version of THEIR answer that keeps their ideas, written at about ${nextL.cefr} level in natural spoken English, ${L.goal}-${L.goal+25} words", "tip_ko": "다음에 바로 써먹을 팁 하나 (긍정적으로)"}
+"fixes" are real grammar or word-choice ERRORS only. Give at most ${level < 2 ? 3 : 4} fixes, the most important first. If there are no errors, fixes is [].
+${NATIVE_RULE}
+Do not repeat the same phrase in both "fixes" and "native".`;
   try{
     const r = await ask(prompt);
     const sc = Math.max(0, Math.min(4, +r.score || 0));
@@ -528,7 +617,9 @@ Give at most ${level < 2 ? 3 : 4} fixes, the most important first. If there are 
         <div class="row"><span class="chip ${sc>=3?"good":sc>=2?"warn":"bad"}">Score ${sc} / 4</span>${r.cefr ? `<span class="tag">Sounds like ${esc(r.cefr)}</span>` : ""}</div>
         ${r.cheer ? `<p class="cheer">“${esc(r.cheer)}”</p>` : ""}
         <p>${esc(r.summary_ko)}</p>
+        ${(r.fixes||[]).length ? `<span class="label">✏️ Fix these errors</span>` : ""}
         ${(r.fixes||[]).map(f => `<div class="fix"><span><s>${esc(f.wrong)}</s> → <ins>${esc(f.right)}</ins></span><span class="ko">${esc(f.why_ko)}</span></div>`).join("")}
+        <div id="sNative">${nativeHTML(r.native)}</div>
         <span class="label">Level-up version · read it aloud</span>
         <p class="better">${esc(r.better)}</p>
         <div class="two">
@@ -539,6 +630,7 @@ Give at most ${level < 2 ? 3 : 4} fixes, the most important first. If there are 
       </div>`;
     $("sHearCheer").onclick = () => speak(r.cheer, "cheer");
     $("sHearBetter").onclick = () => speak(r.better);
+    wireNative($("sNative"), r.native || []);
     if(r.cheer) speak(r.cheer, "cheer");
     renderLevel();
   }catch(e){
@@ -629,14 +721,15 @@ Reply with only JSON: {"natural": true, "used_word": true, "cheer": "one short, 
   try{
     const r = await ask(prompt, "quick");
     const ok = r.natural && r.used_word;
+    const nat = [{ said: sent, native: r.corrected, why_ko: r.why_ko, use: "both" }];
     $("vOut").innerHTML = `<div class="card" style="padding:14px;gap:10px">
       <span class="chip ${ok ? "good" : "warn"}">${ok ? "Natural ✓" : r.used_word ? "Almost! See the fix" : "The word is missing"}</span>
       ${r.cheer ? `<p class="cheer">“${esc(r.cheer)}”</p>` : ""}
-      ${ok ? "" : `<p class="better">${esc(r.corrected)}</p>`}
-      <p class="ko">${esc(r.why_ko)}</p>
+      ${ok ? `<p class="ko">${esc(r.why_ko)}</p>` : `<div id="vNative">${nativeHTML(nat)}</div>`}
       ${(r.examples||[]).map(x => `<p class="ko">• ${esc(x)}</p>`).join("")}
       <button class="btn" id="vHear">🔊 Listen</button></div>`;
     $("vHear").onclick = () => speak(ok ? sent : r.corrected);
+    if(!ok) wireNative($("vNative"), nat);
     if(r.cheer) speak(r.cheer, "cheer");
     reveal();
   }catch(e){
@@ -659,9 +752,85 @@ function rate(good){
 $("vAgain").onclick = () => rate(false);
 $("vGood").onclick = () => rate(true);
 
+/* ================= PHRASES REVIEW ================= */
+let P = { q: [], cur: null, del: null };
+function buildPQueue(){ const now = Date.now(); P.q = phrases().filter(x => x.due <= now).map(x => x.id); }
+/* Share of the native phrase's words the learner said, in order (LCS). */
+function matchPct(target, said){
+  const t = words(target), s = words(said);
+  if(!t.length) return 0;
+  const dp = Array.from({length: t.length + 1}, () => new Array(s.length + 1).fill(0));
+  for(let i = t.length - 1; i >= 0; i--) for(let j = s.length - 1; j >= 0; j--)
+    dp[i][j] = t[i] === s[j] ? dp[i+1][j+1] + 1 : Math.max(dp[i+1][j], dp[i][j+1]);
+  return Math.round(dp[0][0] / t.length * 100);
+}
+function pRender(){
+  const list = phrases(), byId = Object.fromEntries(list.map(x => [x.id, x]));
+  P.q = P.q.filter(id => byId[id]);
+  const it = P.cur = byId[P.q[0]];
+  $("pCount").textContent = list.length ? `${P.q.length} to review now · ${list.length} saved` : "";
+  $("pCard").hidden = !it;
+  $("pEmpty").hidden = !!it;
+  if(!list.length){
+    $("pEmpty").innerHTML = "No phrases yet. Get feedback in 🎙 Speaking or ✨ Words, then tap <b>🔖 Save</b> on a native upgrade.<br>아직 저장한 표현이 없어요. 피드백에서 🔖 Save를 눌러 모아 보세요!";
+  }else if(!it){
+    const next = Math.min(...list.map(x => x.due));
+    $("pEmpty").textContent = `All reviewed! 🎉 Next review: ${new Date(next).toLocaleDateString()} · 오늘 복습 끝! 아래 목록에서 소리 내어 읽어 보세요.`;
+  }
+  if(it){
+    $("pSaidBox").hidden = !it.said;
+    $("pSaid").textContent = it.said;
+    $("pTry").value = ""; $("pAns").hidden = true; $("pShow").hidden = false;
+    $("pNative").textContent = it.native;
+    $("pWhy").textContent = (it.use && USE[it.use] ? USE[it.use] + " · " : "") + (it.why || "");
+  }
+  $("pAllSum").textContent = `All saved phrases (${list.length})`;
+  $("pAll").hidden = !list.length;
+  $("pList").innerHTML = list.map(x => `<div class="plist"><div><b>${esc(x.native)}</b>${x.said ? `<br><span class="ko said">${esc(x.said)}</span>` : ""}</div>
+    <button data-ph="${x.id}" aria-label="Listen">🔊</button><button data-del="${x.id}" aria-label="Delete">${P.del === x.id ? "Sure?" : "🗑"}</button></div>`).join("");
+  $("pList").querySelectorAll("[data-ph]").forEach(b => b.onclick = () => speak(byId[b.dataset.ph].native));
+  $("pList").querySelectorAll("[data-del]").forEach(b => b.onclick = () => {
+    const id = b.dataset.del;
+    if(P.del !== id){ P.del = id; pRender(); return; }  // tap twice to delete
+    P.del = null;
+    store.set("phrases", phrases().filter(x => x.id !== id));
+    updatePhraseTab(); pRender();
+  });
+  updatePhraseTab();
+}
+$("pShow").onclick = () => {
+  const it = P.cur; if(!it) return;
+  const tried = $("pTry").value.trim();
+  $("pAns").hidden = false; $("pShow").hidden = true;
+  if(tried){
+    const pct = matchPct(it.native, tried);
+    $("pMatch").innerHTML = `<span class="chip ${pct>=85?"good":pct>=50?"warn":"bad"}">${pct>=85 ? "So native! ✨" : pct>=50 ? "Close!" : "Keep practicing"} · ${pct}% match</span>`;
+    if(pct >= 85) speak(pick(["Yay, you sound so natural!","Ooh, perfect!","Love it! That's exactly how we say it!"]), "cheer");
+    else speak(it.native);
+  }else{
+    $("pMatch").innerHTML = "";
+    speak(it.native);
+  }
+};
+$("pHear").onclick = () => speak(P.cur?.native);
+function pRate(good){
+  const it = P.cur; if(!it) return;
+  const list = phrases(), x = list.find(y => y.id === it.id); if(!x) return;
+  x.box = good ? Math.min(x.box + 1, STEPS.length - 1) : -1;
+  x.due = good ? Date.now() + STEPS[x.box] * DAY : Date.now();
+  store.set("phrases", list);
+  P.q.shift();
+  if(!good) P.q.splice(Math.min(3, P.q.length), 0, it.id);
+  synth && synth.cancel();
+  if(good) toast(pick(["Nice! 🎉","So native! ✨","You got it! 💪"]));
+  pRender(); window.scrollTo({ top: 0 });
+}
+$("pAgain").onclick = () => pRate(false);
+$("pGood").onclick = () => pRate(true);
+
 /* ================= START ================= */
-renderLevel(); sRender(); buildQueue(); vRender();
-tab(store.get("tab") === "v" ? "v" : "s");
+renderLevel(); sRender(); buildQueue(); vRender(); updatePhraseTab();
+tab(["v","p"].includes(store.get("tab")) ? store.get("tab") : "s");
 </script>
 
 </body></html>
