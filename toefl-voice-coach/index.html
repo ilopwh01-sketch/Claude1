@@ -1,0 +1,672 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>TOEFL Voice Coach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+:root{
+  color-scheme: light;
+  --ink:#14213D; --paper:#F5F6FA; --card:#FFFFFF; --line:#DCE0EA; --muted:#5B6479;
+  --teal:#0E7C7B; --teal-soft:#DDF1F0; --amber:#B45309; --amber-soft:#FDF0DC;
+  --red:#C8102E; --red-soft:#FBE3E7; --good:#1C7C3A; --good-soft:#E0F2E6;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --ink:#E6EAF4; --paper:#0F1524; --card:#172036; --line:#2A3552; --muted:#9AA4BD;
+    --teal:#4FC3C1; --teal-soft:#123A3E; --amber:#F2A541; --amber-soft:#3A2A12;
+    --red:#FF6B7F; --red-soft:#3D1620; --good:#6FD08C; --good-soft:#153624;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --ink:#E6EAF4; --paper:#0F1524; --card:#172036; --line:#2A3552; --muted:#9AA4BD;
+  --teal:#4FC3C1; --teal-soft:#123A3E; --amber:#F2A541; --amber-soft:#3A2A12;
+  --red:#FF6B7F; --red-soft:#3D1620; --good:#6FD08C; --good-soft:#153624;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font:16px/1.55 var(--body);padding-inline:16px;padding-block:20px 48px}
+[hidden]{display:none!important}
+.wrap{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+header{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:12px}
+h1{font:800 clamp(28px,5vw,40px)/1.05 var(--display);margin:0;letter-spacing:-.01em;text-wrap:balance}
+h1 small{display:block;font:600 13px/1.4 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--teal);margin-bottom:6px}
+h2{font:600 22px/1.2 var(--display);margin:0;text-wrap:balance}
+h3{font:700 15px/1.3 var(--body);margin:0;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+p{margin:0}
+.ko{color:var(--muted);font-size:14px}
+.settings{display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:14px;color:var(--muted)}
+select,input[type=range]{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 8px;max-width:100%}
+nav{display:flex;gap:6px;flex-wrap:wrap;border-bottom:2px solid var(--line)}
+nav button{font:700 15px var(--body);background:none;border:0;color:var(--muted);padding:10px 14px;border-bottom:3px solid transparent;margin-bottom:-2px;cursor:pointer}
+nav button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--teal)}
+nav button:focus-visible,.btn:focus-visible,select:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:16px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.btn{font:700 15px var(--body);border-radius:10px;padding:11px 18px;border:2px solid var(--ink);background:var(--card);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.btn.primary{background:var(--teal);border-color:var(--teal);color:#fff}
+:root[data-theme="dark"] .btn.primary{color:#0F1524}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn.primary{color:#0F1524}}
+.btn.rec{background:var(--red);border-color:var(--red);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.dot{width:10px;height:10px;border-radius:50%;background:currentColor}
+.rec .dot{animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.25}}
+@media (prefers-reduced-motion: reduce){.rec .dot{animation:none}}
+.stage{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center}
+@media (max-width:560px){.stage{grid-template-columns:1fr}}
+.prompt{font:600 clamp(19px,3vw,23px)/1.35 var(--display)}
+.prompt.blur{filter:blur(7px);user-select:none}
+.timer{font:700 40px/1 var(--mono);font-variant-numeric:tabular-nums;text-align:center;min-width:130px;padding:12px 16px;border-radius:12px;background:var(--paper);border:1px solid var(--line)}
+.timer .lbl{display:block;font:700 11px var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.timer.prep{background:var(--amber-soft);border-color:var(--amber);color:var(--amber)}
+.timer.speak{background:var(--red-soft);border-color:var(--red);color:var(--red)}
+.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--teal);width:0;transition:width .25s linear}
+.transcript{min-height:64px;padding:12px 14px;border-radius:10px;background:var(--paper);border:1px dashed var(--line);font-size:17px}
+.transcript .interim{color:var(--muted)}
+textarea{width:100%;min-height:90px;font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px}
+.steps{display:flex;gap:6px;flex-wrap:wrap}
+.steps span{font:700 13px var(--mono);width:30px;height:30px;display:grid;place-items:center;border-radius:8px;border:1px solid var(--line);color:var(--muted)}
+.steps span.on{border-color:var(--teal);color:var(--teal);background:var(--teal-soft)}
+.steps span.done{background:var(--teal);border-color:var(--teal);color:var(--card)}
+.diff{font-size:18px;line-height:1.9}
+.diff .ok{color:var(--good);background:var(--good-soft);border-radius:4px;padding:1px 3px}
+.diff .miss{color:var(--red);background:var(--red-soft);border-radius:4px;padding:1px 3px;text-decoration:line-through}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.stat{padding:12px;border:1px solid var(--line);border-radius:10px}
+.stat b{display:block;font:700 24px var(--mono);font-variant-numeric:tabular-nums}
+.stat span{font-size:13px;color:var(--muted)}
+.chip{display:inline-block;font:700 12px var(--body);letter-spacing:.04em;padding:3px 9px;border-radius:999px}
+.chip.good{background:var(--good-soft);color:var(--good)}
+.chip.warn{background:var(--amber-soft);color:var(--amber)}
+.chip.bad{background:var(--red-soft);color:var(--red)}
+ul.tips{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.model{border-left:4px solid var(--teal);padding:4px 0 4px 14px;display:flex;flex-direction:column;gap:8px}
+.notice{padding:12px 14px;border-radius:10px;background:var(--amber-soft);color:var(--amber);font-size:14px}
+.hist{width:100%;border-collapse:collapse;font-size:14px}
+.hist td,.hist th{text-align:left;padding:8px;border-bottom:1px solid var(--line)}
+.hist td.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.tablewrap{overflow-x:auto}
+footer{font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1><small>TOEFL iBT Speaking</small>TOEFL Voice Coach</h1>
+    <div class="settings">
+      <label for="voiceSel">Voice</label>
+      <select id="voiceSel"></select>
+      <label for="rate">Speed</label>
+      <input id="rate" type="range" min="0.7" max="1.2" step="0.05" value="0.95">
+    </div>
+  </header>
+
+  <div id="noMic" class="notice" hidden>
+    Your browser can't turn speech into text. Use <b>Google Chrome</b> or <b>Microsoft Edge</b> on a computer or Android phone for voice mode. You can still listen to every question and type your answer below.<br>
+    <span class="ko">음성 인식은 Chrome 또는 Edge 브라우저에서 동작합니다. 지금은 질문 듣기 + 타이핑으로 연습할 수 있어요.</span>
+  </div>
+
+  <nav role="tablist">
+    <button role="tab" data-tab="repeat" aria-selected="true">Listen &amp; Repeat</button>
+    <button role="tab" data-tab="interview" aria-selected="false">Take an Interview</button>
+    <button role="tab" data-tab="classic" aria-selected="false">Independent (Classic)</button>
+    <button role="tab" data-tab="history" aria-selected="false">My Progress</button>
+  </nav>
+
+  <!-- LISTEN & REPEAT -->
+  <section class="panel" id="tab-repeat">
+    <div class="row" style="justify-content:space-between">
+      <h2>Listen &amp; Repeat</h2>
+      <select id="repeatSet" aria-label="Choose a sentence set"></select>
+    </div>
+    <p>You hear a sentence once. Repeat it exactly. Sentences get longer as you go, like the real test (7 sentences per set).<br>
+    <span class="ko">문장을 한 번 듣고 똑같이 따라 말하세요. 뒤로 갈수록 문장이 길어집니다.</span></p>
+    <div class="steps" id="repeatSteps"></div>
+    <div class="stage">
+      <p class="prompt blur" id="repeatText">Press “Play sentence” to begin.</p>
+      <div class="timer" id="repeatTimer"><span class="lbl">Ready</span>--</div>
+    </div>
+    <div class="row">
+      <button class="btn primary" id="repeatPlay">▶ Play sentence</button>
+      <button class="btn" id="repeatStop" disabled><span class="dot"></span>Done speaking</button>
+      <button class="btn" id="repeatShow">Show text</button>
+      <button class="btn" id="repeatNext">Next →</button>
+    </div>
+    <div class="transcript" id="repeatHeard" aria-live="polite"><span class="interim">Your words will appear here.</span></div>
+    <textarea id="repeatType" placeholder="No microphone? Type what you heard, then press Check." hidden></textarea>
+    <button class="btn" id="repeatCheck" hidden>Check</button>
+    <div id="repeatResult" hidden class="panel" style="padding:14px"></div>
+  </section>
+
+  <!-- INTERVIEW -->
+  <section class="panel" id="tab-interview" hidden>
+    <div class="row" style="justify-content:space-between">
+      <h2>Take an Interview</h2>
+      <select id="interviewSet" aria-label="Choose an interview topic"></select>
+    </div>
+    <p>An interviewer asks 4 questions on one topic. There is no preparation time. Answer each one for up to <b>45 seconds</b>.<br>
+    <span class="ko">준비 시간 없이 바로 45초 동안 답하세요. 이유 + 구체적 예시를 꼭 넣으세요.</span></p>
+    <div class="steps" id="interviewSteps"></div>
+    <div class="stage">
+      <p class="prompt" id="interviewQ">Press “Ask me” to hear the first question.</p>
+      <div class="timer" id="interviewTimer"><span class="lbl">Ready</span>0:45</div>
+    </div>
+    <div class="bar"><i id="interviewBar"></i></div>
+    <div class="row">
+      <button class="btn primary" id="interviewAsk">▶ Ask me</button>
+      <button class="btn" id="interviewStop" disabled><span class="dot"></span>Stop</button>
+      <button class="btn" id="interviewNext">Next question →</button>
+    </div>
+    <div class="transcript" id="interviewHeard" aria-live="polite"><span class="interim">Your answer will appear here as you speak.</span></div>
+    <textarea id="interviewType" placeholder="No microphone? Type your answer here, then press Get feedback." hidden></textarea>
+    <button class="btn" id="interviewCheck" hidden>Get feedback</button>
+    <div id="interviewResult" hidden></div>
+  </section>
+
+  <!-- CLASSIC -->
+  <section class="panel" id="tab-classic" hidden>
+    <div class="row" style="justify-content:space-between">
+      <h2>Independent Speaking</h2>
+      <button class="btn" id="classicNew">New question</button>
+    </div>
+    <p>The classic TOEFL opinion task: <b>15 seconds</b> to prepare, then <b>45 seconds</b> to speak. Still great practice for organizing your ideas.<br>
+    <span class="ko">15초 준비, 45초 말하기. 의견 → 이유 1 + 예시 → 이유 2 + 예시 → 마무리.</span></p>
+    <div class="stage">
+      <p class="prompt" id="classicQ"></p>
+      <div class="timer" id="classicTimer"><span class="lbl">Ready</span>0:15</div>
+    </div>
+    <div class="bar"><i id="classicBar"></i></div>
+    <div class="row">
+      <button class="btn primary" id="classicStart">▶ Start (read + prep + speak)</button>
+      <button class="btn" id="classicStop" disabled><span class="dot"></span>Stop</button>
+    </div>
+    <div class="transcript" id="classicHeard" aria-live="polite"><span class="interim">Your answer will appear here as you speak.</span></div>
+    <textarea id="classicType" placeholder="No microphone? Type your answer here, then press Get feedback." hidden></textarea>
+    <button class="btn" id="classicCheck" hidden>Get feedback</button>
+    <div id="classicResult" hidden></div>
+  </section>
+
+  <!-- HISTORY -->
+  <section class="panel" id="tab-history" hidden>
+    <div class="row" style="justify-content:space-between">
+      <h2>My Progress</h2>
+      <button class="btn" id="histClear">Clear history</button>
+    </div>
+    <p class="ko">Saved only in this browser. 이 브라우저에만 저장됩니다.</p>
+    <div class="tablewrap"><table class="hist"><thead><tr><th>Date</th><th>Task</th><th>Result</th><th>Words</th><th>WPM</th></tr></thead><tbody id="histBody"></tbody></table></div>
+    <h3>How to score higher</h3>
+    <ul class="tips">
+      <li><b>Aim for 110–150 words per minute.</b> That is about 85–110 words in 45 seconds.</li>
+      <li><b>Answer first, then explain.</b> “I prefer X because…” in your first sentence.</li>
+      <li><b>Give one specific example.</b> A name, a place, a time: “Last semester, my roommate…”</li>
+      <li><b>Use linking words:</b> <i>because, for example, in addition, however, as a result, that's why</i>.</li>
+      <li><b>Cut fillers.</b> Replace “um / uh” with a short silent pause.</li>
+      <li><b>Keep talking until the timer ends.</b> Finishing early costs points for development.</li>
+    </ul>
+  </section>
+
+  <footer>Voice input uses your browser's built‑in speech recognition (Chrome / Edge). Scores here are practice estimates, not official ETS scores.</footer>
+</div>
+
+<script>
+/* ---------------- Content ---------------- */
+const REPEAT_SETS = [
+  { name: "Campus tour", items: [
+    "Welcome to the campus tour.",
+    "The library is open until midnight.",
+    "Please keep your student card with you.",
+    "The dining hall is on the second floor of this building.",
+    "If you get lost, ask anyone wearing a blue volunteer shirt.",
+    "Most first-year students live in the dormitories near the science center.",
+    "Before the semester starts, make sure you register for classes online through the student portal."
+  ]},
+  { name: "Science museum", items: [
+    "This way to the next exhibit.",
+    "Photos are allowed without a flash.",
+    "This fossil is over sixty million years old.",
+    "The planetarium show begins every hour on the hour.",
+    "Children under twelve must stay with an adult at all times.",
+    "The ocean gallery explains how whales communicate over long distances.",
+    "If you would like to learn more, our guided audio tour is available at the information desk for free."
+  ]},
+  { name: "Study group", items: [
+    "Let's meet at three.",
+    "Did you finish the reading?",
+    "I think the professor changed the deadline.",
+    "We should divide the project into four equal parts.",
+    "Could you send me your notes from yesterday's lecture?",
+    "The final presentation should be about fifteen minutes long, including questions.",
+    "Since the lab is closed on weekends, we need to collect all our data before Friday afternoon."
+  ]}
+];
+
+const INTERVIEW_SETS = [
+  { name: "Study habits", intro: "A researcher is asking students about how they study.", qs: [
+    { q: "Thanks for joining. First, can you tell me where you usually like to study, and why?",
+      m: "I usually study at a small café near my apartment. The main reason is that the background noise actually helps me focus. At home, I get distracted by my phone or by housework. For example, last month I had a big exam, and I went to the café every evening for a week. I finished all my review without wasting time, and I got one of my best scores." },
+    { q: "Some students prefer to study alone, while others prefer study groups. Which do you prefer?",
+      m: "I prefer studying alone for most subjects, because I can go at my own speed. In a group, people often chat and we lose time. However, for difficult subjects like statistics, a group is useful. When I didn't understand a formula, a friend explained it in a simple way. So I study alone first, and then meet a group to check difficult points." },
+    { q: "How has technology changed the way you study compared to a few years ago?",
+      m: "Technology has changed my studying a lot. A few years ago, I used only paper textbooks. Now, I use flashcard apps and online videos. For instance, I learn new English words with an app for ten minutes every morning on the bus. As a result, I study in small pieces every day instead of cramming, and I remember things much longer." },
+    { q: "Finally, what advice would you give to a new student who wants to study more effectively?",
+      m: "My advice is to make a simple schedule and review a little every day. Many new students wait until the night before an exam, and that causes stress. When I started university, I made the same mistake and my grades were low. After I began reviewing for thirty minutes every evening, my grades improved quickly. So consistency is more important than long hours." }
+  ]},
+  { name: "Technology & daily life", intro: "A researcher is studying how people use technology.", qs: [
+    { q: "To begin, how much time do you spend on your smartphone each day, and what do you use it for?",
+      m: "I spend about three hours a day on my smartphone. Mostly, I use it for messaging friends, reading news, and listening to podcasts while I commute. For example, every morning I listen to an English podcast on the subway. That way, my phone time is not only for fun, but it also helps me improve my listening skills." },
+    { q: "Do you think online shopping is better than shopping in physical stores?",
+      m: "In my opinion, online shopping is better for most things. It saves time, and it's easy to compare prices. For example, I recently bought a laptop online and saved almost one hundred dollars compared to the store price. However, for clothes and shoes I still prefer physical stores, because I want to try them on before I buy." },
+    { q: "Some people say technology makes us less social. Do you agree?",
+      m: "I partly disagree. Technology can make people less social when they look at their phones during meals. But it also helps us stay connected. For instance, my best friend moved to Canada two years ago, and we still video-call every weekend. Without technology, we would probably have lost touch. So I think it depends on how we use it." },
+    { q: "Lastly, what is one new technology you would like to see in the future, and why?",
+      m: "I would like to see real-time translation glasses. They would show subtitles when someone speaks another language. This would help travelers and international students a lot. When I first traveled to Japan, I couldn't read signs or talk to people at the station, and I felt lost. With these glasses, communication would be easier and people could understand each other's cultures better." }
+  ]},
+  { name: "City & community", intro: "A researcher is asking people about their neighborhood.", qs: [
+    { q: "Let's start with your neighborhood. What do you like most about the place where you live?",
+      m: "What I like most about my neighborhood is the park near my building. It's quiet and has a long walking path along a river. For example, after a stressful day, I go for a thirty-minute walk there and I feel much more relaxed. It's also a place where I often meet my neighbors, so it makes the area feel like a community." },
+    { q: "Should cities spend more money on public transportation or on building new roads?",
+      m: "I believe cities should spend more on public transportation. New roads often bring even more cars and traffic. Buses and subways move many people at once and cause less pollution. In my city, a new subway line opened last year, and my commute became twenty minutes shorter. Many of my friends also stopped driving to work because of it." },
+    { q: "Do you think young people should volunteer in their communities? Why or why not?",
+      m: "Yes, I think young people should volunteer. First, it teaches responsibility and teamwork. Second, it helps them understand people with different lives. In high school, I volunteered at a local library teaching elderly people how to use smartphones. I learned to be patient and explain things clearly, and those skills still help me in my part-time job today." },
+    { q: "Finally, if you could change one thing about your city, what would it be?",
+      m: "If I could change one thing, I would add more bicycle lanes. Right now, riding a bike in my city is dangerous because we share the road with cars. Last year, my friend was almost hit by a taxi. Safe bike lanes would encourage more people to cycle, which would reduce traffic and air pollution, and people would be healthier too." }
+  ]}
+];
+
+const CLASSIC = [
+  { q: "Some people prefer to live in a big city, while others prefer a small town. Which do you prefer and why?",
+    m: "I prefer living in a big city for two reasons. First, there are more job opportunities. For example, my cousin moved to Seoul and found a job in design within a month, which would be hard in a small town. Second, cities have more culture, like museums, concerts, and restaurants from around the world. On weekends I can try something new. That's why a big city suits me better." },
+  { q: "Do you agree or disagree: It is better to work in a team than to work alone?",
+    m: "I agree that working in a team is usually better. First, team members can share ideas, so the final result is more creative. In my marketing class, our group combined three different ideas into one campaign and got the highest grade. Second, work is divided, so each person has less pressure. Although teamwork needs good communication, the benefits are much greater." },
+  { q: "Some students like to take classes in the morning, while others prefer evening classes. Which do you prefer?",
+    m: "I prefer morning classes. First, my mind is fresh in the morning, so I can concentrate better. Last semester I had an 8 a.m. economics class, and it was my best grade. Second, if my classes end early, I have the whole afternoon to study, exercise, or work part-time. Evening classes would make my day feel too long and tiring." },
+  { q: "Is it better to save money for the future or to spend money to enjoy life now?",
+    m: "I think it's better to save most of your money for the future. Unexpected problems can happen at any time. For example, last year my laptop broke right before finals, and because I had savings, I bought a new one immediately. However, I also think it's important to spend a little on experiences, like trips with friends, so life doesn't become stressful." },
+  { q: "Describe a person who has had a big influence on your life. Explain why.",
+    m: "The person who influenced me most is my high school English teacher. She always encouraged us to speak, even when we made mistakes. For example, she started a weekly speaking club, and at first I was too nervous to say anything. After a few months, I gave a five-minute speech in front of the whole school. She taught me that confidence comes from practice." },
+  { q: "Do you agree or disagree: Students should be required to take physical education classes.",
+    m: "I agree that students should be required to take physical education. First, many students sit all day and don't exercise, which is bad for their health. Second, sports teach teamwork and discipline. In middle school, I joined basketball in PE class and made close friends I still see today. So PE classes are good for both the body and social skills." }
+];
+
+/* ---------------- Speech: output ---------------- */
+const synth = window.speechSynthesis;
+const voiceSel = document.getElementById("voiceSel");
+const rateEl = document.getElementById("rate");
+let voices = [];
+function loadVoices(){
+  if(!synth) return;
+  voices = synth.getVoices().filter(v => /^en[-_]/i.test(v.lang));
+  const saved = store.get("voice");
+  voiceSel.innerHTML = "";
+  voices.forEach((v,i) => {
+    const o = document.createElement("option");
+    o.value = i; o.textContent = `${v.name} (${v.lang})`;
+    voiceSel.append(o);
+  });
+  let idx = voices.findIndex(v => v.name === saved);
+  if(idx < 0) idx = voices.findIndex(v => /en-US/i.test(v.lang) && /Google|Natural|Samantha|Aria|Jenny/i.test(v.name));
+  if(idx < 0) idx = voices.findIndex(v => /en-US/i.test(v.lang));
+  if(idx >= 0) voiceSel.value = idx;
+}
+function speak(text){
+  return new Promise(resolve => {
+    if(!synth){ resolve(); return; }
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    const v = voices[+voiceSel.value]; if(v){ u.voice = v; u.lang = v.lang; } else u.lang = "en-US";
+    u.rate = +rateEl.value;
+    u.onend = u.onerror = () => resolve();
+    synth.speak(u);
+  });
+}
+function beep(){
+  try{
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.frequency.value = 880; g.gain.value = .12;
+    o.connect(g); g.connect(ctx.destination); o.start();
+    setTimeout(()=>{ o.stop(); ctx.close(); }, 220);
+  }catch(e){}
+}
+
+/* ---------------- Speech: input ---------------- */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+const hasSR = !!SR;
+if(!hasSR){
+  document.getElementById("noMic").hidden = false;
+  document.querySelectorAll("textarea, #repeatCheck, #interviewCheck, #classicCheck").forEach(el => el.hidden = false);
+}
+/* A listener that keeps restarting until stopped (Chrome ends sessions after silence). */
+function makeListener(outEl){
+  let rec = null, finalText = "", active = false;
+  function render(interim){
+    outEl.innerHTML = "";
+    const f = document.createElement("span"); f.textContent = finalText;
+    const i = document.createElement("span"); i.className = "interim"; i.textContent = interim ? " " + interim : "";
+    outEl.append(f, i);
+    if(!finalText && !interim){ i.textContent = "Listening… start speaking."; }
+  }
+  function startRec(){
+    rec = new SR(); rec.lang = "en-US"; rec.continuous = true; rec.interimResults = true;
+    rec.onresult = e => {
+      let interim = "";
+      for(let k = e.resultIndex; k < e.results.length; k++){
+        const r = e.results[k];
+        if(r.isFinal) finalText = (finalText + " " + r[0].transcript).trim();
+        else interim += r[0].transcript;
+      }
+      render(interim);
+    };
+    rec.onerror = e => {
+      if(e.error === "not-allowed" || e.error === "service-not-allowed"){
+        active = false;
+        outEl.textContent = "Microphone blocked. Allow microphone access in your browser's address bar, then try again.";
+      }
+    };
+    rec.onend = () => { if(active){ try{ startRec(); }catch(err){} } };
+    rec.start();
+  }
+  return {
+    start(){ finalText = ""; active = true; render(""); try{ startRec(); }catch(e){} },
+    stop(){ active = false; try{ rec && rec.stop(); }catch(e){} return new Promise(r => setTimeout(() => r(finalText), 600)); },
+    get text(){ return finalText; }
+  };
+}
+
+/* ---------------- Helpers ---------------- */
+const store = {
+  get(k){ try{ return JSON.parse(localStorage.getItem("tvc_"+k)); }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem("tvc_"+k, JSON.stringify(v)); }catch(e){} }
+};
+const $ = id => document.getElementById(id);
+const words = s => (s||"").toLowerCase().replace(/[’']/g,"'").replace(/[^a-z0-9' -]/g," ").split(/[\s-]+/).filter(Boolean);
+const fmt = s => `${Math.floor(s/60)}:${String(Math.max(0,Math.ceil(s%60))).padStart(2,"0")}`;
+function esc(s){ const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+const NUMS = {one:"1",two:"2",three:"3",four:"4",five:"5",six:"6",seven:"7",eight:"8",nine:"9",ten:"10",twelve:"12",fifteen:"15",sixty:"60"};
+const norm = w => NUMS[w] || w.replace(/'s$/,"s");
+
+function countdown(seconds, timerEl, label, cls, barEl){
+  let stop = false, resolveFn;
+  const p = new Promise(res => {
+    resolveFn = res;
+    const end = Date.now() + seconds*1000;
+    timerEl.className = "timer " + cls;
+    const tick = () => {
+      const left = (end - Date.now())/1000;
+      timerEl.innerHTML = `<span class="lbl">${label}</span>${fmt(Math.max(0,left))}`;
+      if(barEl) barEl.style.width = (100 - Math.max(0,left)/seconds*100) + "%";
+      if(stop || left <= 0){ res(seconds - Math.max(0,left)); return; }
+      setTimeout(tick, 200);
+    };
+    tick();
+  });
+  return { promise: p, cancel(){ stop = true; } };
+}
+
+/* Word-level match of target vs spoken (LCS) */
+function compare(target, spoken){
+  const t = words(target), s = words(spoken).map(norm);
+  const tn = t.map(norm);
+  const dp = Array.from({length:t.length+1}, () => new Array(s.length+1).fill(0));
+  for(let i=t.length-1;i>=0;i--) for(let j=s.length-1;j>=0;j--)
+    dp[i][j] = tn[i]===s[j] ? dp[i+1][j+1]+1 : Math.max(dp[i+1][j], dp[i][j+1]);
+  const hit = new Array(t.length).fill(false);
+  let i=0,j=0;
+  while(i<t.length && j<s.length){
+    if(tn[i]===s[j]){ hit[i]=true; i++; j++; }
+    else if(dp[i+1][j] >= dp[i][j+1]) i++; else j++;
+  }
+  const origTokens = target.split(/\s+/);
+  return { tokens: origTokens, hit, score: t.length ? Math.round(hit.filter(Boolean).length / t.length * 100) : 0 };
+}
+
+const FILLERS = ["um","uh","er","erm","ah","like","you know","i mean","actually","basically","kind of","sort of"];
+const LINKERS = ["because","for example","for instance","in addition","also","however","although","as a result","so","that's why","first","second","finally","on the other hand","therefore","in my opinion","i believe","i think","such as","moreover","besides"];
+function countPhrase(text, p){ const re = new RegExp("\\b"+p.replace(/'/g,"'")+"\\b","gi"); return (text.match(re)||[]).length; }
+
+function analyze(text, seconds){
+  const w = words(text);
+  const lower = " " + w.join(" ") + " ";
+  const fillers = {};
+  FILLERS.forEach(f => { const c = countPhrase(lower, f); if(c && !(f==="like" && c<2)) fillers[f]=c; });
+  const fillerTotal = Object.values(fillers).reduce((a,b)=>a+b,0);
+  const linkUsed = LINKERS.filter(l => countPhrase(lower, l) > 0);
+  const unique = new Set(w).size;
+  const variety = w.length ? Math.round(unique / w.length * 100) : 0;
+  const secs = Math.max(seconds || 45, 5);
+  const wpm = Math.round(w.length / secs * 60);
+  const hasExample = /for example|for instance|when i|last (year|month|week|semester|summer)|once|my (friend|brother|sister|mother|father|roommate|cousin|teacher)/i.test(text);
+  let pts = 0;
+  pts += w.length >= 85 ? 2 : w.length >= 60 ? 1.5 : w.length >= 35 ? 1 : 0.5;
+  pts += linkUsed.length >= 4 ? 1 : linkUsed.length >= 2 ? .6 : .2;
+  pts += hasExample ? 1 : 0;
+  pts -= Math.min(1, fillerTotal * 0.15);
+  pts += variety >= 55 ? .5 : 0;
+  const band = Math.max(1, Math.min(4, Math.round(pts))); // 0–4 like the classic rubric
+  return { w, wpm, fillers, fillerTotal, linkUsed, variety, hasExample, band, count: w.length };
+}
+
+function feedbackHTML(a, question, answer, model){
+  const chip = (ok, warn) => ok ? "good" : warn ? "warn" : "bad";
+  const tips = [];
+  if(a.count < 60) tips.push("Your answer was short. Add one more reason or a longer example so you speak for the full 45 seconds.");
+  if(a.wpm && a.wpm < 100) tips.push("Try to speak a little faster and more smoothly. Target 110–150 words per minute.");
+  if(!a.hasExample) tips.push("Add a specific personal example: “For example, last semester I…”.");
+  if(a.linkUsed.length < 3) tips.push("Use more linking words (because, for example, in addition, as a result) to connect ideas.");
+  if(a.fillerTotal >= 3) tips.push(`You used ${a.fillerTotal} filler words (${Object.keys(a.fillers).join(", ")}). Pause silently instead.`);
+  if(!tips.length) tips.push("Strong structure. Next step: vary your vocabulary and keep your intonation lively.");
+  const prompt = `I'm practicing for the TOEFL iBT speaking section. Please grade my answer (TOEFL speaking rubric), correct my grammar, suggest better vocabulary, and give me an improved version I can practice aloud.\n\nQuestion: ${question}\n\nMy spoken answer (speech-to-text transcript): ${answer || "(empty)"}`;
+  const id = "m" + Math.random().toString(36).slice(2);
+  setTimeout(() => {
+    const copyBtn = document.getElementById(id+"c"), speakBtn = document.getElementById(id+"s"), ta = document.getElementById(id+"t");
+    copyBtn.onclick = async () => {
+      try{ await navigator.clipboard.writeText(prompt); copyBtn.textContent = "Copied ✓"; }
+      catch(e){ ta.hidden = false; ta.select(); copyBtn.textContent = "Select the text below and copy it"; }
+    };
+    speakBtn.onclick = () => speak(model);
+  });
+  return `
+  <div class="panel" style="padding:16px">
+    <div class="row" style="justify-content:space-between">
+      <h3>Your feedback</h3>
+      <span class="chip ${chip(a.band>=3,a.band==2)}">Practice estimate: ${a.band} / 4</span>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>${a.count}</b><span>words (goal 85+)</span></div>
+      <div class="stat"><b>${a.wpm}</b><span>words / minute (goal 110–150)</span></div>
+      <div class="stat"><b>${a.fillerTotal}</b><span>filler words (goal 0–2)</span></div>
+      <div class="stat"><b>${a.linkUsed.length}</b><span>linking words used</span></div>
+    </div>
+    <div class="row">
+      <span class="chip ${chip(a.hasExample)}">${a.hasExample ? "Specific example ✓" : "No clear example"}</span>
+      ${a.linkUsed.slice(0,8).map(l => `<span class="chip good">${esc(l)}</span>`).join("")}
+    </div>
+    <ul class="tips">${tips.map(t => `<li>${esc(t)}</li>`).join("")}</ul>
+    <div class="model">
+      <h3>Model answer (read it aloud, then try again)</h3>
+      <p>${esc(model)}</p>
+      <div class="row">
+        <button class="btn" id="${id}s">🔊 Listen to model answer</button>
+        <button class="btn" id="${id}c">Copy for Claude feedback</button>
+      </div>
+      <textarea id="${id}t" readonly hidden>${esc(prompt)}</textarea>
+      <p class="ko">Paste into Claude for grammar corrections and a detailed score. Claude에 붙여넣으면 문법 교정과 자세한 채점을 받을 수 있어요.</p>
+    </div>
+  </div>`;
+}
+
+function saveHistory(task, result, count, wpm){
+  const h = store.get("hist") || [];
+  h.unshift({ d: new Date().toISOString(), task, result, count, wpm });
+  store.set("hist", h.slice(0,100));
+}
+function renderHistory(){
+  const h = store.get("hist") || [];
+  $("histBody").innerHTML = h.length ? h.map(r => `<tr><td>${new Date(r.d).toLocaleString()}</td><td>${esc(r.task)}</td><td>${esc(r.result)}</td><td class="n">${r.count ?? "–"}</td><td class="n">${r.wpm ?? "–"}</td></tr>`).join("")
+    : `<tr><td colspan="5">No practice yet. Your results will show up here.</td></tr>`;
+}
+
+/* ---------------- Tabs ---------------- */
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("nav button").forEach(x => x.setAttribute("aria-selected", x===b));
+  ["repeat","interview","classic","history"].forEach(t => $("tab-"+t).hidden = t !== b.dataset.tab);
+  if(b.dataset.tab === "history") renderHistory();
+  synth && synth.cancel();
+});
+
+/* ---------------- Listen & Repeat ---------------- */
+const R = { set: 0, idx: 0, listener: makeListener($("repeatHeard")), busy:false };
+REPEAT_SETS.forEach((s,i) => { const o = document.createElement("option"); o.value=i; o.textContent = s.name; $("repeatSet").append(o); });
+function repeatRender(){
+  const items = REPEAT_SETS[R.set].items;
+  $("repeatSteps").innerHTML = items.map((_,i) => `<span class="${i<R.idx?'done':i===R.idx?'on':''}">${i+1}</span>`).join("");
+  $("repeatText").textContent = items[R.idx];
+  $("repeatText").classList.add("blur");
+  $("repeatResult").hidden = true;
+  $("repeatHeard").innerHTML = `<span class="interim">Your words will appear here.</span>`;
+  $("repeatType").value = "";
+  $("repeatTimer").className = "timer"; $("repeatTimer").innerHTML = `<span class="lbl">Sentence</span>${R.idx+1}/7`;
+}
+function repeatGrade(spoken){
+  const target = REPEAT_SETS[R.set].items[R.idx];
+  const c = compare(target, spoken);
+  const cls = c.score >= 90 ? "good" : c.score >= 60 ? "warn" : "bad";
+  $("repeatText").classList.remove("blur");
+  $("repeatResult").hidden = false;
+  $("repeatResult").innerHTML = `
+    <div class="row" style="justify-content:space-between"><h3>Match</h3><span class="chip ${cls}">${c.score}% correct</span></div>
+    <p class="diff">${c.tokens.map((t,i) => `<span class="${c.hit[i]?'ok':'miss'}">${esc(t)}</span>`).join(" ")}</p>
+    <p class="ko">${c.score>=90 ? "Excellent! 아주 좋아요." : "Red words were missed or unclear. Press ▶ to hear it again and retry. 빨간 단어를 다시 연습하세요."}</p>`;
+  saveHistory("Listen & Repeat", `${REPEAT_SETS[R.set].name} #${R.idx+1}: ${c.score}%`, words(spoken).length, null);
+}
+$("repeatSet").onchange = () => { R.set = +$("repeatSet").value; R.idx = 0; repeatRender(); };
+$("repeatPlay").onclick = async () => {
+  if(R.busy) return; R.busy = true;
+  $("repeatPlay").disabled = true; $("repeatResult").hidden = true;
+  $("repeatTimer").className = "timer prep"; $("repeatTimer").innerHTML = `<span class="lbl">Listen</span>🔊`;
+  await speak(REPEAT_SETS[R.set].items[R.idx]);
+  R.busy = false; $("repeatPlay").disabled = false;
+  if(!hasSR){ $("repeatType").focus(); return; }
+  beep();
+  $("repeatTimer").className = "timer speak"; $("repeatTimer").innerHTML = `<span class="lbl">Your turn</span>🎙`;
+  R.listener.start();
+  $("repeatStop").disabled = false; $("repeatStop").classList.add("rec");
+  const words_n = words(REPEAT_SETS[R.set].items[R.idx]).length;
+  clearTimeout(R.auto);
+  R.auto = setTimeout(() => $("repeatStop").click(), Math.max(6000, words_n * 900));
+};
+$("repeatStop").onclick = async () => {
+  clearTimeout(R.auto);
+  $("repeatStop").disabled = true; $("repeatStop").classList.remove("rec");
+  const text = await R.listener.stop();
+  $("repeatTimer").className = "timer"; $("repeatTimer").innerHTML = `<span class="lbl">Sentence</span>${R.idx+1}/7`;
+  repeatGrade(text);
+};
+$("repeatCheck").onclick = () => repeatGrade($("repeatType").value);
+$("repeatShow").onclick = () => $("repeatText").classList.toggle("blur");
+$("repeatNext").onclick = () => { R.idx = (R.idx + 1) % 7; if(R.idx===0){ R.set = (R.set+1) % REPEAT_SETS.length; $("repeatSet").value = R.set; } repeatRender(); };
+
+/* ---------------- Interview ---------------- */
+const I = { set: 0, idx: 0, listener: makeListener($("interviewHeard")), timer: null };
+INTERVIEW_SETS.forEach((s,i) => { const o = document.createElement("option"); o.value=i; o.textContent = s.name; $("interviewSet").append(o); });
+function interviewRender(){
+  const s = INTERVIEW_SETS[I.set];
+  $("interviewSteps").innerHTML = s.qs.map((_,i) => `<span class="${i<I.idx?'done':i===I.idx?'on':''}">Q${i+1}</span>`).join("");
+  $("interviewSteps").querySelectorAll("span").forEach(x => x.style.width = "40px");
+  $("interviewQ").textContent = I.idx === 0 ? `${s.intro} Press “Ask me” to hear question 1.` : `Press “Ask me” to hear question ${I.idx+1}.`;
+  $("interviewResult").hidden = true;
+  $("interviewHeard").innerHTML = `<span class="interim">Your answer will appear here as you speak.</span>`;
+  $("interviewType").value = "";
+  $("interviewTimer").className = "timer"; $("interviewTimer").innerHTML = `<span class="lbl">Ready</span>0:45`;
+  $("interviewBar").style.width = "0";
+}
+async function interviewFinish(spokenSecs){
+  const item = INTERVIEW_SETS[I.set].qs[I.idx];
+  const text = hasSR ? await I.listener.stop() : $("interviewType").value;
+  $("interviewStop").disabled = true; $("interviewStop").classList.remove("rec");
+  $("interviewAsk").disabled = false;
+  $("interviewTimer").className = "timer"; $("interviewTimer").innerHTML = `<span class="lbl">Done</span>✓`;
+  const a = analyze(text, spokenSecs || 45);
+  $("interviewResult").innerHTML = feedbackHTML(a, item.q, text, item.m);
+  $("interviewResult").hidden = false;
+  saveHistory("Interview", `${INTERVIEW_SETS[I.set].name} Q${I.idx+1}: ${a.band}/4`, a.count, a.wpm);
+}
+$("interviewSet").onchange = () => { I.set = +$("interviewSet").value; I.idx = 0; interviewRender(); };
+$("interviewAsk").onclick = async () => {
+  const item = INTERVIEW_SETS[I.set].qs[I.idx];
+  $("interviewAsk").disabled = true; $("interviewResult").hidden = true;
+  $("interviewQ").textContent = item.q;
+  $("interviewTimer").className = "timer prep"; $("interviewTimer").innerHTML = `<span class="lbl">Listen</span>🔊`;
+  await speak((I.idx===0 ? INTERVIEW_SETS[I.set].intro + " " : "") + item.q);
+  if(!hasSR){ $("interviewAsk").disabled = false; $("interviewType").focus(); return; }
+  beep();
+  I.listener.start();
+  $("interviewStop").disabled = false; $("interviewStop").classList.add("rec");
+  I.timer = countdown(45, $("interviewTimer"), "Speak", "speak", $("interviewBar"));
+  const secs = await I.timer.promise;
+  interviewFinish(secs);
+};
+$("interviewStop").onclick = () => I.timer && I.timer.cancel();
+$("interviewCheck").onclick = () => interviewFinish(45);
+$("interviewNext").onclick = () => { I.idx = (I.idx + 1) % 4; if(I.idx===0){ I.set=(I.set+1)%INTERVIEW_SETS.length; $("interviewSet").value = I.set; } interviewRender(); };
+
+/* ---------------- Classic ---------------- */
+const C = { idx: Math.floor(Math.random()*CLASSIC.length), listener: makeListener($("classicHeard")), timer: null };
+function classicRender(){
+  $("classicQ").textContent = CLASSIC[C.idx].q;
+  $("classicResult").hidden = true;
+  $("classicHeard").innerHTML = `<span class="interim">Your answer will appear here as you speak.</span>`;
+  $("classicType").value = "";
+  $("classicTimer").className = "timer"; $("classicTimer").innerHTML = `<span class="lbl">Ready</span>0:15`;
+  $("classicBar").style.width = "0";
+}
+async function classicFinish(secs){
+  const item = CLASSIC[C.idx];
+  const text = hasSR ? await C.listener.stop() : $("classicType").value;
+  $("classicStop").disabled = true; $("classicStop").classList.remove("rec");
+  $("classicStart").disabled = false;
+  $("classicTimer").className = "timer"; $("classicTimer").innerHTML = `<span class="lbl">Done</span>✓`;
+  const a = analyze(text, secs || 45);
+  $("classicResult").innerHTML = feedbackHTML(a, item.q, text, item.m);
+  $("classicResult").hidden = false;
+  saveHistory("Independent", `${a.band}/4`, a.count, a.wpm);
+}
+$("classicNew").onclick = () => { C.idx = (C.idx + 1) % CLASSIC.length; classicRender(); };
+$("classicStart").onclick = async () => {
+  $("classicStart").disabled = true; $("classicResult").hidden = true;
+  $("classicTimer").className = "timer prep"; $("classicTimer").innerHTML = `<span class="lbl">Listen</span>🔊`;
+  await speak(CLASSIC[C.idx].q);
+  beep();
+  C.timer = countdown(15, $("classicTimer"), "Prepare", "prep", $("classicBar"));
+  $("classicStop").disabled = false;
+  await C.timer.promise;
+  beep();
+  if(!hasSR){ $("classicStop").disabled = true; $("classicStart").disabled = false; $("classicTimer").innerHTML = `<span class="lbl">Type</span>✍`; $("classicType").focus(); return; }
+  C.listener.start(); $("classicStop").classList.add("rec");
+  C.timer = countdown(45, $("classicTimer"), "Speak", "speak", $("classicBar"));
+  const secs = await C.timer.promise;
+  classicFinish(secs);
+};
+$("classicStop").onclick = () => C.timer && C.timer.cancel();
+$("classicCheck").onclick = () => classicFinish(45);
+
+/* ---------------- Init ---------------- */
+$("histClear").onclick = () => { store.set("hist", []); renderHistory(); };
+voiceSel.onchange = () => { const v = voices[+voiceSel.value]; v && store.set("voice", v.name); };
+const savedRate = store.get("rate"); if(savedRate) rateEl.value = savedRate;
+rateEl.onchange = () => store.set("rate", rateEl.value);
+if(synth){ loadVoices(); synth.onvoiceschanged = loadVoices; }
+repeatRender(); interviewRender(); classicRender();
+</script>
+</body>
+</html>
