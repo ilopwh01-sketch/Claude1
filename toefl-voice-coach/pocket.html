@@ -88,6 +88,13 @@ select{font:inherit;color:var(--ink);background:var(--paper);border:1px solid va
 .banner{padding:14px;border-radius:14px;background:var(--good-soft);color:var(--good);display:flex;flex-direction:column;gap:10px;font-weight:700}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 18px;border-radius:999px;font-weight:700;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.show{opacity:1}
+.nav{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center}
+.nav .btn{width:auto;min-height:44px;padding:8px 12px}
+.nav select{min-height:44px;font-weight:700}
+.styles{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.styles button{font:700 14px var(--body);padding:10px 4px;border-radius:10px;border:2px solid var(--teal);background:var(--card);color:var(--ink)}
+.styles button[aria-checked="true"]{background:var(--teal);color:var(--on-teal)}
+.styles button:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
 [hidden]{display:none!important}
 @media (prefers-reduced-motion: reduce){*{transition:none!important}}
 </style>
@@ -102,10 +109,15 @@ select{font:inherit;color:var(--ink);background:var(--paper);border:1px solid va
   <section class="card" id="voicePanel" hidden>
     <span class="label">Coach voice</span>
     <select id="voiceSel" aria-label="Coach voice"></select>
+    <span class="label">Voice style</span>
+    <div class="styles" id="styleSel" role="radiogroup" aria-label="Voice style"></div>
+    <button class="btn" id="voiceReload">🔄 Reload voice list 목소리 목록 다시 불러오기</button>
+    <p class="ko" id="voiceInfo" aria-live="polite"></p>
     <div class="two">
       <button class="btn" id="voiceTest">▶ Test voice</button>
       <button class="btn" id="voiceClose">Done</button>
     </div>
+    <p class="ko">🎀 더 산뜻하고 귀여운 목소리를 원하면 목록에서 <b>Zoe</b>나 <b>Nicky</b>도 들어보세요. Ava보다 가볍고 어리게 들려요.</p>
     <p class="ko">🎧 더 자연스러운 목소리: 아이폰 <b>설정 → 손쉬운 사용 → 읽기 및 말하기 → 음성 → 영어</b>에서 <b>Ava</b> 또는 <b>Zoe</b>의 <b>향상된/프리미엄</b> 음성을 내려받은 뒤, 이 페이지를 새로고침하고 위에서 고르세요.</p>
   </section>
 
@@ -161,6 +173,11 @@ select{font:inherit;color:var(--ink);background:var(--paper);border:1px solid va
     <div class="row" style="justify-content:space-between">
       <span class="label" id="vCount"></span>
       <span class="lv" id="vLv"></span>
+    </div>
+    <div class="nav">
+      <button class="btn" id="vPrev" aria-label="Previous word">‹ Prev</button>
+      <select id="vJump" aria-label="Jump to a word"></select>
+      <button class="btn" id="vNext" aria-label="Next word">Next ›</button>
     </div>
     <div class="row" style="justify-content:space-between;flex-wrap:nowrap">
       <div><div class="word" id="vWord"></div><div class="meta" id="vMeta"></div></div>
@@ -319,6 +336,21 @@ const pick = a => a[Math.floor(Math.random()*a.length)];
 /* ================= VOICE: bright, friendly female ================= */
 const synth = window.speechSynthesis;
 let voices = [], voice = null;
+/* Higher pitch + a quicker, lighter pace reads as fresh and cute; lower and slower reads as warm. */
+const STYLES = {
+  cute:    { label:"🎀 Cute",    pitch:1.35, rate:1.06, cheerPitch:1.5,  cheerRate:1.12 },
+  bright:  { label:"☀️ Bright",  pitch:1.18, rate:1.02, cheerPitch:1.3,  cheerRate:1.08 },
+  natural: { label:"🙂 Natural", pitch:1.0,  rate:0.97, cheerPitch:1.1,  cheerRate:1.02 }
+};
+let style = STYLES[store.get("style")] ? store.get("style") : "cute";
+function renderStyles(){
+  $("styleSel").innerHTML = Object.entries(STYLES).map(([k,s]) => `<button role="radio" data-s="${k}" aria-checked="${k===style}">${s.label}</button>`).join("");
+  $("styleSel").querySelectorAll("button").forEach(b => b.onclick = () => {
+    style = b.dataset.s; store.set("style", style); renderStyles();
+    speak("Hi! This is how I sound now. Isn't it cute?", "cheer");
+  });
+}
+renderStyles();
 const BAD = /Fred|Alex|Daniel|Guy|Tom\b|Aaron|Evan|Nathan|Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Wobble|Whisper|Zarvox|Trinoids|Organ|Jester|Superstar|Hysterical|Ralph|Junior|Kathy|Rocko|Grandpa|Grandma|Eddy|Reed|Sandy|Shelley|Flo\b|Good News|Deranged|Pipe|Andrew|Brian|Christopher|Eric|Roger|Steffan|Davis|Tony|Jason|Oliver|Arthur|Gordon|Lee\b|Rishi|Male/i;
 function vScore(v){
   const n = v.name; let s = 0;
@@ -337,7 +369,19 @@ function loadVoices(){
   voice = voices.find(v => v.name === saved) || voices[0] || null;
   $("voiceSel").innerHTML = voices.map((v,i) => `<option value="${i}">${esc(v.name)} (${esc(v.lang)})</option>`).join("") || `<option>Default voice</option>`;
   if(voice) $("voiceSel").value = voices.indexOf(voice);
+  const hasAva = voices.some(v => /Ava/i.test(v.name));
+  $("voiceInfo").textContent = voices.length
+    ? `${voices.length} English voices found${voice ? " · using " + voice.name : ""}. ` + (hasAva ? "Ava is ready! ✓" : "Ava isn't in the list yet. Ava가 아직 목록에 없어요.")
+    : "Loading voices… 목소리를 불러오는 중이에요.";
 }
+$("voiceReload").onclick = () => {
+  if(!synth) return;
+  // Wake up iOS speech so newly downloaded voices get listed, then read the list again.
+  const u = new SpeechSynthesisUtterance(" "); u.volume = 0; synth.speak(u);
+  store.set("voice", null);
+  setTimeout(loadVoices, 300); setTimeout(loadVoices, 1500);
+  toast("Reloading voices… 🔄");
+};
 if(synth){ loadVoices(); synth.onvoiceschanged = loadVoices; }
 function speak(t, mood){
   return new Promise(res => {
@@ -345,9 +389,9 @@ function speak(t, mood){
     synth.cancel();
     const u = new SpeechSynthesisUtterance(t);
     if(voice){ u.voice = voice; u.lang = voice.lang; } else u.lang = "en-US";
-    // A slightly higher pitch and natural pace sound warmer and happier than the flat default.
-    u.pitch = mood === "cheer" ? 1.2 : 1.12;
-    u.rate = mood === "cheer" ? 1.05 : 0.98;
+    const st = STYLES[style] || STYLES.cute;
+    u.pitch = mood === "cheer" ? st.cheerPitch : st.pitch;
+    u.rate = mood === "cheer" ? st.cheerRate : st.rate;
     u.onend = u.onerror = () => res();
     synth.speak(u);
   });
@@ -355,7 +399,7 @@ function speak(t, mood){
 $("gear").onclick = () => { const p = $("voicePanel"); p.hidden = !p.hidden; $("gear").setAttribute("aria-expanded", !p.hidden); };
 $("voiceClose").onclick = () => { $("voicePanel").hidden = true; $("gear").setAttribute("aria-expanded", "false"); };
 $("voiceSel").onchange = () => { voice = voices[+$("voiceSel").value] || null; voice && store.set("voice", voice.name); };
-$("voiceTest").onclick = () => speak("Hi there! I'm so happy to practice with you today. You're doing amazing, so let's keep going!", "cheer");
+$("voiceTest").onclick = () => speak("Hi hi! I'm Mia! Ready to practice? Yay, let's go!", "cheer");
 
 /* ================= CLAUDE ================= */
 const samplePromise = window.claude?.use ? window.claude.use("sample") : Promise.resolve(null);
@@ -371,7 +415,7 @@ const ERR = {
   session_expired: "Please sign in to Claude again."
 };
 const errMsg = e => ERR[e?.code] || "Something went wrong. Tap the button to try again.";
-const PERSONA = "You are Mia, a warm, bubbly, genuinely happy American English tutor in her twenties. You are always encouraging and positive, like a supportive best friend, and you celebrate every bit of progress. Your student is a Korean adult preparing for the TOEFL iBT who also wants English for daily life.";
+const PERSONA = "You are Mia, a bubbly, cheerful, playful American English tutor in her early twenties. Your style is fresh, light and cute: short sparkly reactions like 'Ooh, nice one!', 'Yay, that's so good!' or 'Love it!', never slow, heavy or overly sentimental. You are always positive and celebrate every bit of progress. Your student is a Korean adult preparing for the TOEFL iBT who also wants English for daily life.";
 
 /* ================= LEVEL SYSTEM ================= */
 const WORDS_TO_PASS = 10, SPEAK_TO_PASS = 3, SPEAK_AVG = 3;
@@ -406,7 +450,7 @@ function renderLevel(){
 function setLevel(L, celebrate){
   level = L; store.set("level", L);
   renderLevel(); S.i = 0; sRender(); buildQueue(); vRender();
-  if(celebrate) speak(`Woohoo! Welcome to level ${L+1}! I'm so proud of you!`, "cheer");
+  if(celebrate) speak(`Yay! Level ${L+1}! You're amazing!`, "cheer");
 }
 $("lvUpBtn").onclick = () => setLevel(Math.min(level + 1, LEVELS.length - 1), true);
 
@@ -508,22 +552,45 @@ Give at most ${level < 2 ? 3 : 4} fixes, the most important first. If there are 
 
 /* ================= WORDS ================= */
 const DAY = 86400000, STEPS = [1, 3, 7, 14, 30, 60];
-let V = { q: [], cur: null };
+let V = { q: [], i: 0, cur: null };
 function buildQueue(){
   const p = prog(), now = Date.now();
   const due = [];
   for(let L = 0; L <= level; L++) WORDS[L].forEach(it => { if(p[it.w] && p[it.w].due <= now) due.push(it); });
   const fresh = WORDS[level].filter(it => !p[it.w]).slice(0, 10);
-  V.q = [...due, ...fresh];
+  V.q = [...due, ...fresh]; V.i = 0;
 }
 const levelOf = it => WORDS.findIndex(list => list.includes(it));
 function mark(text, it){
   const forms = (it.fm || [it.w]).map(f => f.replace(/[^a-zA-Z' ]/g,"")).sort((a,b) => b.length - a.length);
   return esc(text).replace(new RegExp("(" + forms.join("|") + ")([a-z']*)", "i"), "<mark>$1$2</mark>");
 }
+function renderJump(){
+  const p = prog();
+  const opt = (it, L, i) => `<option value="${L}:${i}"${it === V.cur ? " selected" : ""}>${(p[it.w]?.box ?? -1) >= 1 ? "✓ " : ""}${esc(it.w)}</option>`;
+  $("vJump").innerHTML = `<option value="">📋 Jump to a word…</option>` +
+    WORDS.map((list, L) => `<optgroup label="Lv.${L+1} ${LEVELS[L].name} (${LEVELS[L].cefr})">${list.map((it, i) => opt(it, L, i)).join("")}</optgroup>`).join("");
+}
+$("vJump").onchange = () => {
+  const v = $("vJump").value; if(!v) return;
+  const [L, i] = v.split(":").map(Number), it = WORDS[L][i];
+  const at = V.q.indexOf(it);
+  if(at >= 0) V.i = at; else { V.q.splice(V.i, 0, it); }
+  synth && synth.cancel(); vRender();
+};
+function move(d){
+  if(!V.q.length) return;
+  V.i = (V.i + d + V.q.length) % V.q.length;
+  synth && synth.cancel(); vRender();
+}
+$("vPrev").onclick = () => move(-1);
+$("vNext").onclick = () => move(1);
 function vRender(){
-  $("vCount").textContent = `${V.q.length} cards left today`;
-  const it = V.cur = V.q[0];
+  if(V.i >= V.q.length) V.i = 0;
+  $("vCount").textContent = V.q.length ? `Card ${V.i + 1} / ${V.q.length} today` : "0 cards left today";
+  const it = V.cur = V.q[V.i];
+  $("vPrev").disabled = $("vNext").disabled = V.q.length < 2;
+  renderJump();
   $("vBody").hidden = !it; $("vSay").hidden = !it;
   $("vInfo").hidden = true; $("vOut").innerHTML = ""; $("vSent").value = "";
   if(!it){
@@ -582,8 +649,8 @@ function rate(good){
   const box = good ? Math.min((p[it.w]?.box ?? -1) + 1, STEPS.length - 1) : 0;
   p[it.w] = { box, due: good ? Date.now() + STEPS[box]*DAY : Date.now() };
   store.set("prog", p);
-  V.q.shift();
-  if(!good) V.q.splice(Math.min(3, V.q.length), 0, it);
+  V.q.splice(V.i, 1);
+  if(!good) V.q.splice(Math.min(V.i + 3, V.q.length), 0, it);
   synth && synth.cancel();
   if(good) toast(pick(["Nice! 🎉","Great job! ✨","You got it! 💪","Awesome! 🌟"]));
   vRender(); renderLevel();
