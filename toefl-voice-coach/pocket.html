@@ -1,0 +1,600 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
+<title>TOEFL Pocket Coach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@700&display=swap">
+<style>
+:root{
+  --ink:#14213D; --paper:#F5F6FA; --card:#FFFFFF; --line:#DCE0EA; --muted:#5B6479;
+  --teal:#0E7C7B; --on-teal:#FFFFFF; --teal-soft:#DDF1F0; --amber:#B45309; --amber-soft:#FDF0DC;
+  --red:#C8102E; --red-soft:#FBE3E7; --good:#1C7C3A; --good-soft:#E0F2E6;
+  --l1:#2E8B57; --l2:#1F6FB2; --l3:#7B4BC4; --l4:#C0392B;
+  --display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --ink:#E6EAF4; --paper:#0F1524; --card:#172036; --line:#2A3552; --muted:#9AA4BD;
+    --teal:#4FC3C1; --on-teal:#0F1524; --teal-soft:#123A3E; --amber:#F2A541; --amber-soft:#3A2A12;
+    --red:#FF6B7F; --red-soft:#3D1620; --good:#6FD08C; --good-soft:#153624;
+    --l1:#6FD08C; --l2:#6AB3F2; --l3:#B69CF0; --l4:#FF8A7A;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --ink:#E6EAF4; --paper:#0F1524; --card:#172036; --line:#2A3552; --muted:#9AA4BD;
+  --teal:#4FC3C1; --on-teal:#0F1524; --teal-soft:#123A3E; --amber:#F2A541; --amber-soft:#3A2A12;
+  --red:#FF6B7F; --red-soft:#3D1620; --good:#6FD08C; --good-soft:#153624;
+  --l1:#6FD08C; --l2:#6AB3F2; --l3:#B69CF0; --l4:#FF8A7A;
+}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font:17px/1.55 var(--body);padding-inline:16px;padding-block:14px 40px}
+.wrap{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+h1{font:800 24px/1.1 var(--display);margin:0}
+p{margin:0}
+.ko{color:var(--muted);font-size:14px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.icon{font:700 20px var(--body);width:46px;height:46px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:4px;gap:4px}
+.tabs button{font:700 16px var(--body);border:0;border-radius:10px;padding:12px;background:none;color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--teal);color:var(--on-teal)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:14px}
+.label{font:700 12px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.q{font:700 21px/1.35 var(--display)}
+.btn{font:700 16px var(--body);min-height:50px;border-radius:12px;border:2px solid var(--ink);background:var(--card);color:var(--ink);padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:8px;width:100%}
+.btn.primary{background:var(--teal);border-color:var(--teal);color:var(--on-teal)}
+.btn:disabled{opacity:.45}
+.btn:focus-visible,.tabs button:focus-visible,textarea:focus-visible,.icon:focus-visible,.lvpick button:focus-visible,select:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.timer{font:700 34px/1 var(--mono);text-align:center;padding:12px;border-radius:12px;background:var(--paper);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.timer.on{background:var(--red-soft);border-color:var(--red);color:var(--red)}
+.timer.over{background:var(--amber-soft);border-color:var(--amber);color:var(--amber)}
+textarea{width:100%;min-height:140px;font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px;resize:vertical}
+select{font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px;width:100%}
+.mic{display:flex;gap:10px;align-items:flex-start;padding:12px;border-radius:12px;background:var(--teal-soft);font-size:14px}
+.chip{display:inline-block;font:700 13px var(--body);padding:4px 10px;border-radius:999px}
+.good{background:var(--good-soft);color:var(--good)} .warn{background:var(--amber-soft);color:var(--amber)} .bad{background:var(--red-soft);color:var(--red)}
+.tag{font:700 12px var(--body);padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.lv{font:700 12px var(--body);padding:3px 9px;border-radius:999px;color:var(--card);background:var(--lvc)}
+.lv1{--lvc:var(--l1)} .lv2{--lvc:var(--l2)} .lv3{--lvc:var(--l3)} .lv4{--lvc:var(--l4)}
+.fix{display:flex;flex-direction:column;gap:4px;padding:10px 0;border-top:1px solid var(--line)}
+.fix s{color:var(--red)} .fix ins{color:var(--good);text-decoration:none;font-weight:700}
+.better{border-left:4px solid var(--teal);padding-left:12px}
+.cheer{font:700 18px/1.4 var(--display);color:var(--teal)}
+.word{font:800 36px/1.05 var(--display);overflow-wrap:anywhere}
+.meta{font:700 13px var(--mono);color:var(--muted)}
+.ex{display:flex;gap:10px;align-items:flex-start;padding:12px;border-radius:12px;background:var(--paper)}
+.ex p{flex:1}
+.ex mark{background:var(--teal-soft);color:var(--ink);border-radius:4px;padding:0 3px}
+.ex button{flex:none;width:44px;height:44px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:18px}
+.ex .kind{display:block;font:700 12px var(--body);letter-spacing:.06em;color:var(--muted);margin-bottom:2px}
+.colls{display:flex;flex-wrap:wrap;gap:8px}
+.coll{font:700 14px var(--body);padding:8px 12px;border-radius:999px;border:1px solid var(--teal);background:var(--teal-soft);color:var(--ink)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.stats{display:flex;gap:8px;flex-wrap:wrap}
+/* level card */
+.level{display:flex;flex-direction:column;gap:10px;border-top:5px solid var(--lvc)}
+.lvname{font:800 20px var(--display)}
+.meter{display:grid;grid-template-columns:auto 1fr auto;gap:8px 10px;align-items:center;font-size:14px}
+.bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--lvc);border-radius:4px}
+.num{font:700 13px var(--mono);font-variant-numeric:tabular-nums;color:var(--muted)}
+.lvpick{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.lvpick button{font:700 13px var(--body);padding:8px 4px;border-radius:10px;border:2px solid var(--lvc);background:var(--card);color:var(--ink)}
+.lvpick button[aria-pressed="true"]{background:var(--lvc);color:var(--card)}
+.banner{padding:14px;border-radius:14px;background:var(--good-soft);color:var(--good);display:flex;flex-direction:column;gap:10px;font-weight:700}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 18px;border-radius:999px;font-weight:700;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <h1>TOEFL Pocket Coach</h1>
+    <button class="icon" id="gear" aria-label="Voice settings" aria-expanded="false">⚙</button>
+  </div>
+
+  <!-- voice settings -->
+  <section class="card" id="voicePanel" hidden>
+    <span class="label">Coach voice</span>
+    <select id="voiceSel" aria-label="Coach voice"></select>
+    <div class="two">
+      <button class="btn" id="voiceTest">▶ Test voice</button>
+      <button class="btn" id="voiceClose">Done</button>
+    </div>
+    <p class="ko">🎧 더 자연스러운 목소리: 아이폰 <b>설정 → 손쉬운 사용 → 읽기 및 말하기 → 음성 → 영어</b>에서 <b>Ava</b> 또는 <b>Zoe</b>의 <b>향상된/프리미엄</b> 음성을 내려받은 뒤, 이 페이지를 새로고침하고 위에서 고르세요.</p>
+  </section>
+
+  <!-- level card -->
+  <section class="card level" id="levelCard">
+    <div class="row" style="justify-content:space-between">
+      <div>
+        <span class="label">My level</span>
+        <div class="lvname" id="lvName"></div>
+        <p class="ko" id="lvDesc"></p>
+      </div>
+      <span class="lv" id="lvChip"></span>
+    </div>
+    <div class="meter">
+      <span>📚 Words</span><div class="bar"><i id="barW"></i></div><span class="num" id="numW"></span>
+      <span>🎙 Speaking</span><div class="bar"><i id="barS"></i></div><span class="num" id="numS"></span>
+    </div>
+    <p class="ko" id="lvGoal"></p>
+    <div id="lvUp" class="banner" hidden>
+      <span id="lvUpText"></span>
+      <button class="btn primary" id="lvUpBtn">🚀 Level up!</button>
+    </div>
+    <details>
+      <summary class="ko">Change level 레벨 직접 바꾸기</summary>
+      <div class="lvpick" id="lvPick" style="margin-top:10px"></div>
+    </details>
+  </section>
+
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tabS" aria-selected="true">🎙 Speaking</button>
+    <button role="tab" id="tabV" aria-selected="false">📚 Words</button>
+  </div>
+
+  <!-- SPEAKING -->
+  <section id="speak" class="card">
+    <div class="row"><span class="lv" id="sLv"></span><span class="tag" id="sTag"></span></div>
+    <p class="q" id="sQ"></p>
+    <div class="two">
+      <button class="btn" id="sListen">🔊 Listen</button>
+      <button class="btn" id="sNew">↻ New question</button>
+    </div>
+    <div class="timer" id="sTimer">0:45</div>
+    <button class="btn primary" id="sStart">▶ Start 45 seconds</button>
+    <div class="mic"><b>🎤</b><span>Tap the box, then tap the microphone on your keyboard and speak.<br><span class="ko">입력창을 누르고 키보드의 🎤 버튼을 눌러 영어로 말하세요.</span></span></div>
+    <textarea id="sAns" placeholder="Your spoken answer appears here…"></textarea>
+    <div class="stats" id="sStats"></div>
+    <button class="btn primary" id="sCheck">✨ Get feedback</button>
+    <div id="sOut"></div>
+  </section>
+
+  <!-- WORDS -->
+  <section id="words" class="card" hidden>
+    <div class="row" style="justify-content:space-between">
+      <span class="label" id="vCount"></span>
+      <span class="lv" id="vLv"></span>
+    </div>
+    <div class="row" style="justify-content:space-between;flex-wrap:nowrap">
+      <div><div class="word" id="vWord"></div><div class="meta" id="vMeta"></div></div>
+      <button class="btn" id="vSay" style="width:auto">🔊</button>
+    </div>
+    <div id="vBody" style="display:flex;flex-direction:column;gap:12px">
+      <div class="ex"><p><span class="kind">🏫 ON THE TOEFL</span><span id="vT"></span></p><button id="vPlayT" aria-label="Play TOEFL sentence">▶</button></div>
+      <div class="ex"><p><span class="kind">🏠 IN DAILY LIFE</span><span id="vD"></span></p><button id="vPlayD" aria-label="Play daily sentence">▶</button></div>
+      <p class="ko" id="vGuess">Guess the meaning first. 먼저 두 문장을 듣고 뜻을 추측해 보세요.</p>
+      <button class="btn" id="vShow">Show meaning</button>
+      <div id="vInfo" hidden style="display:flex;flex-direction:column;gap:10px">
+        <p style="font-weight:700;font-size:19px" id="vKo"></p>
+        <div class="colls" id="vColl"></div>
+        <p class="ko" id="vNote"></p>
+      </div>
+      <span class="label">Say your own sentence</span>
+      <textarea id="vSent" style="min-height:90px" placeholder="🎤 Use the keyboard microphone to say a sentence about YOUR life…"></textarea>
+      <button class="btn" id="vCheck">✨ Is it natural?</button>
+      <div id="vOut"></div>
+      <div class="two">
+        <button class="btn" id="vAgain">Again</button>
+        <button class="btn primary" id="vGood">Got it ✓</button>
+      </div>
+    </div>
+  </section>
+
+  <p class="ko">Levels follow CEFR (A2–C1), roughly matching the TOEFL iBT 1–6 score bands. Practice scores are estimates, not official ETS scores. 진행 상황은 이 기기에만 저장돼요.</p>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ================= CONTENT ================= */
+const LEVELS = [
+  { name:"Starter",   cefr:"A2", band:"≈ TOEFL band 2", ko:"기초 · 내 일상을 짧고 정확하게 말하기", goal:40 },
+  { name:"Everyday",  cefr:"B1", band:"≈ TOEFL band 3", ko:"일상 · 이유와 경험을 붙여서 말하기", goal:60 },
+  { name:"Confident", cefr:"B2", band:"≈ TOEFL band 4", ko:"토플 인터뷰 · 의견 + 구체적 예시", goal:80 },
+  { name:"Academic",  cefr:"C1", band:"≈ TOEFL band 5", ko:"학술 · 설득력 있는 논리와 고급 어휘", goal:95 }
+];
+
+/* Every word appears in TOEFL texts AND in everyday conversation.
+   w word, p part of speech, s stress, k Korean, c collocations, t TOEFL sentence, d daily sentence, n note, fm match forms */
+const WORDS = [
+ [ // Lv1 A2
+  { w:"prefer", p:"verb", s:"pre-FER", k:"(~을) 더 좋아하다", c:["prefer A to B","I'd prefer to…","which do you prefer"], t:"Some students prefer studying alone to studying in groups.", d:"I'd prefer coffee, thanks!", n:"prefer A to B (O) / prefer A than B (X)", fm:["prefer"] },
+  { w:"improve", p:"verb", s:"im-PROVE", k:"향상시키다, 나아지다", c:["improve my English","improve quickly","room to improve"], t:"Regular practice can improve students' speaking skills.", d:"My cooking has really improved this year.", fm:["improv"] },
+  { w:"habit", p:"noun", s:"HAB-it", k:"습관", c:["a good habit","break a habit","get into the habit of"], t:"Reading every day is a habit that helps students succeed.", d:"I'm trying to break the habit of checking my phone in bed.", fm:["habit"] },
+  { w:"schedule", p:"noun / verb", s:"SKED-jool", k:"일정; 일정을 잡다", c:["a busy schedule","on schedule","schedule a meeting"], t:"Students with a busy schedule often study late at night.", d:"Can we schedule a call for tomorrow?", n:"미국식 발음은 '스케쥴', 영국식은 '셰쥴'", fm:["schedul"] },
+  { w:"recommend", p:"verb", s:"rec-om-MEND", k:"추천하다", c:["highly recommend","recommend a place","I'd recommend…"], t:"The professor recommends reading the chapter before class.", d:"Can you recommend a good place for dinner?", n:"recommend + -ing / recommend that…", fm:["recommend"] },
+  { w:"crowded", p:"adj", s:"CROWD-ed", k:"붐비는", c:["a crowded bus","get crowded","crowded with people"], t:"Cities become crowded as more people move there for jobs.", d:"The subway is always so crowded in the morning.", fm:["crowd"] },
+  { w:"comfortable", p:"adj", s:"KUMF-ta-bul", k:"편안한", c:["feel comfortable","comfortable with","make yourself comfortable"], t:"Students feel more comfortable asking questions in small classes.", d:"These shoes are really comfortable!", n:"원어민은 3음절 'KUMF-ta-bul'로 발음해요", fm:["comfortabl","uncomfortabl"] },
+  { w:"decide", p:"verb", s:"de-CIDE", k:"결정하다", c:["decide to","hard to decide","decide what to…"], t:"Many students decide to change their major in the second year.", d:"I can't decide what to eat!", fm:["decid","decision"] },
+  { w:"borrow", p:"verb", s:"BOR-row", k:"빌리다", c:["borrow a book","can I borrow…","borrow money from"], t:"Students can borrow up to ten books from the library.", d:"Can I borrow your charger for a second?", n:"borrow = 빌려오다 / lend = 빌려주다", fm:["borrow"] },
+  { w:"share", p:"verb / noun", s:"SHARE", k:"공유하다, 나누다", c:["share an idea","share a room","share with"], t:"Students share their ideas in small discussion groups.", d:"Do you want to share a pizza?", fm:["shar"] },
+  { w:"healthy", p:"adj", s:"HEAL-thy", k:"건강한, 건강에 좋은", c:["a healthy diet","stay healthy","healthy habits"], t:"A healthy diet helps students concentrate better.", d:"I'm trying to eat healthy this week.", n:"eat healthy는 자연스러운 구어체 표현", fm:["healthy","healthier","healthiest"] },
+  { w:"solution", p:"noun", s:"so-LU-tion", k:"해결책", c:["find a solution","a simple solution","a solution to"], t:"The city is looking for a solution to its traffic problem.", d:"I think I found a solution to my sleep problem!", n:"solution to + 명사 (for보다 to가 자연스러워요)", fm:["solution"] },
+  { w:"convenient", p:"adj", s:"con-VEEN-yent", k:"편리한", c:["convenient for","more convenient","a convenient time"], t:"Online classes are convenient for students who work.", d:"Is three o'clock convenient for you?", n:"I am convenient (X) → It's convenient for me (O)", fm:["convenien","inconvenien"] },
+  { w:"expensive", p:"adj", s:"ex-PEN-sive", k:"비싼", c:["too expensive","more expensive than","expensive to live in"], t:"Living near campus is often more expensive.", d:"That's a little too expensive for me.", fm:["expensive","inexpensive"] }
+ ],
+ [ // Lv2 B1
+  { w:"figure out", p:"phrasal verb", s:"FIG-ure OUT", k:"알아내다, 이해하다", c:["figure out how to","figure it out","figure out why"], t:"Scientists are trying to figure out why bees are disappearing.", d:"I can't figure out how to use this app.", n:"figure it out (O) / figure out it (X)", fm:["figure out","figured out","figuring out","figures out","figure it out","figured it out"] },
+  { w:"benefit", p:"noun / verb", s:"BEN-e-fit", k:"이점; 혜택을 받다", c:["benefit from","the benefits of","a big benefit"], t:"Students benefit from getting quick feedback on their work.", d:"One benefit of living alone is the quiet.", fm:["benefit","beneficial"] },
+  { w:"affect", p:"verb", s:"af-FECT", k:"영향을 주다", c:["affect my mood","directly affect","be affected by"], t:"A lack of sleep can affect memory.", d:"Rainy days really affect my mood.", n:"affect(동사) vs effect(명사): have an effect on", fm:["affect"] },
+  { w:"reduce", p:"verb", s:"re-DUCE", k:"줄이다", c:["reduce stress","reduce costs","reduce screen time"], t:"Planting trees can reduce air pollution in cities.", d:"I'm trying to reduce my screen time.", fm:["reduc"] },
+  { w:"opportunity", p:"noun", s:"op-por-TOO-ni-ty", k:"기회", c:["a great opportunity","the opportunity to","miss an opportunity"], t:"Internships give students the opportunity to gain real experience.", d:"This trip is a great opportunity to relax.", fm:["opportunit"] },
+  { w:"end up", p:"phrasal verb", s:"end UP", k:"결국 ~하게 되다", c:["end up doing","end up in","end up with"], t:"Many small businesses end up closing within five years.", d:"We ended up staying home all weekend.", n:"end up + -ing: ended up staying (O)", fm:["end up","ended up","ending up","ends up"] },
+  { w:"deal with", p:"phrasal verb", s:"DEAL with", k:"대처하다, 처리하다", c:["deal with stress","deal with a problem","hard to deal with"], t:"Animals deal with cold winters in different ways.", d:"How do you deal with stress?", fm:["deal with","dealt with","dealing with","deals with"] },
+  { w:"available", p:"adj", s:"a-VAIL-a-ble", k:"이용 가능한; (사람이) 시간이 되는", c:["available online","are you available…","not available"], t:"The lecture notes are available online after class.", d:"Are you available this Friday?", fm:["availab"] },
+  { w:"familiar", p:"adj", s:"fa-MIL-yer", k:"익숙한, 친숙한", c:["familiar with","look familiar","sound familiar"], t:"Students should be familiar with the main theories before the exam.", d:"Your face looks so familiar!", n:"be familiar with + 명사", fm:["familiar","unfamiliar"] },
+  { w:"average", p:"noun / adj", s:"AV-rij", k:"평균(의)", c:["on average","above average","the average person"], t:"On average, college students sleep about seven hours a night.", d:"On average, I drink three cups of coffee a day.", fm:["average"] },
+  { w:"environment", p:"noun", s:"en-VY-ron-ment", k:"환경", c:["protect the environment","a quiet environment","a friendly environment"], t:"Plastic waste is harmful to the ocean environment.", d:"I like a quiet environment when I study.", fm:["environment"] },
+  { w:"turn out", p:"phrasal verb", s:"turn OUT", k:"알고 보니 ~이다", c:["it turns out that","turn out to be","as it turned out"], t:"The early theory turned out to be wrong.", d:"It turned out that the store was closed.", fm:["turn out","turned out","turning out","turns out"] },
+  { w:"attitude", p:"noun", s:"AT-ti-tood", k:"태도, 마음가짐", c:["a positive attitude","attitude toward","change your attitude"], t:"A positive attitude can improve how students learn.", d:"I love her positive attitude!", fm:["attitud"] },
+  { w:"rely on", p:"phrasal verb", s:"re-LY on", k:"의존하다, 믿다", c:["rely on technology","rely heavily on","you can rely on me"], t:"Many birds rely on the sun to find their way.", d:"I rely on my phone way too much.", fm:["rely on","relied on","relying on","relies on"] }
+ ],
+ [ // Lv3 B2
+  { w:"significant", p:"adj", s:"sig-NIF-i-cant", k:"상당한, 중요한", c:["a significant difference","significantly better","play a significant role"], t:"The new policy had a significant effect on small businesses.", d:"There's a significant difference between these two phones.", fm:["significan","insignifican"] },
+  { w:"impact", p:"noun / verb", s:"IM-pact", k:"영향(을 주다)", c:["have an impact on","a huge impact","a negative impact"], t:"Social media has a huge impact on how teenagers see themselves.", d:"That movie had a big impact on me.", n:"have an impact on (O) / impact to (X)", fm:["impact"] },
+  { w:"crucial", p:"adj", s:"CROO-shul", k:"결정적인, 매우 중요한", c:["play a crucial role","crucial for","absolutely crucial"], t:"Water plays a crucial role in controlling body temperature.", d:"Sleep is crucial before a big exam.", fm:["crucial"] },
+  { w:"evidence", p:"noun", s:"EV-i-dence", k:"증거, 근거", c:["strong evidence","evidence suggests that","no evidence"], t:"There is strong evidence that exercise improves memory.", d:"There's no evidence he ate my cake… but I know he did!", n:"셀 수 없는 명사: an evidence (X) → a piece of evidence (O)", fm:["evidenc"] },
+  { w:"maintain", p:"verb", s:"main-TAIN", k:"유지하다", c:["maintain a balance","maintain a routine","maintain contact"], t:"It's hard to maintain a balance between work and school.", d:"I try to maintain a regular sleep schedule.", fm:["maintain","maintenanc"] },
+  { w:"perspective", p:"noun", s:"per-SPEC-tive", k:"관점, 시각", c:["from my perspective","a whole new perspective","put things in perspective"], t:"The article looks at the issue from an economic perspective.", d:"Traveling gave me a whole new perspective on life.", fm:["perspective"] },
+  { w:"approach", p:"noun / verb", s:"a-PROACH", k:"접근법; 다가가다", c:["a different approach","a new approach to","approach a problem"], t:"Scientists took a new approach to studying the disease.", d:"Let's try a different approach this time.", fm:["approach"] },
+  { w:"contribute", p:"verb", s:"con-TRIB-yoot", k:"기여하다; ~의 원인이 되다", c:["contribute to","contribute ideas","contribute money"], t:"Many factors contribute to climate change.", d:"Everyone contributed ten dollars for her birthday gift.", n:"contribute to + 명사/-ing", fm:["contribut"] },
+  { w:"decline", p:"noun / verb", s:"de-CLINE", k:"감소(하다); 거절하다", c:["a sharp decline in","decline an invitation","steadily decline"], t:"There has been a sharp decline in bee populations.", d:"I had to decline the invitation because I was sick.", fm:["declin"] },
+  { w:"come up with", p:"phrasal verb", s:"come UP with", k:"(아이디어를) 생각해내다", c:["come up with an idea","come up with a plan","come up with a solution"], t:"Researchers came up with a new way to store energy.", d:"We need to come up with a plan for the weekend.", fm:["come up with","came up with","coming up with","comes up with"] },
+  { w:"reluctant", p:"adj", s:"re-LUC-tant", k:"(~하기를) 꺼리는", c:["reluctant to ask","a little reluctant","reluctantly"], t:"Many students are reluctant to ask questions in class.", d:"I was reluctant to try sushi at first, but now I love it.", n:"be reluctant to + 동사원형", fm:["reluctan"] },
+  { w:"adapt", p:"verb", s:"a-DAPT", k:"적응하다; 맞추다", c:["adapt to","adapt quickly","adapt to a new environment"], t:"Some animals adapt to cold climates by growing thicker fur.", d:"It took me a while to adapt to my new job.", fm:["adapt"] },
+  { w:"factor", p:"noun", s:"FAC-tor", k:"요인", c:["a key factor","a major factor in","several factors"], t:"Cost was a major factor in the city's decision.", d:"The weather is a big factor when I plan a trip.", fm:["factor"] },
+  { w:"consistent", p:"adj", s:"con-SIS-tent", k:"일관된, 꾸준한", c:["be consistent","consistent with","consistently"], t:"The results were consistent with earlier studies.", d:"Being consistent is the key to learning English.", fm:["consisten","inconsisten"] }
+ ],
+ [ // Lv4 C1
+  { w:"phenomenon", p:"noun", s:"phe-NOM-e-non", k:"현상", c:["a natural phenomenon","a common phenomenon","a social phenomenon"], t:"Bird migration is a fascinating natural phenomenon.", d:"Online shopping at 2 a.m. is a real phenomenon these days.", n:"복수형 phenomena", fm:["phenomen"] },
+  { w:"hypothesis", p:"noun", s:"hy-POTH-e-sis", k:"가설", c:["test a hypothesis","support the hypothesis","my hypothesis is…"], t:"The results supported the researchers' hypothesis.", d:"My hypothesis is that the cat knocked over the plant.", n:"복수형 hypotheses", fm:["hypothes"] },
+  { w:"demonstrate", p:"verb", s:"DEM-on-strate", k:"입증하다; 시연하다", c:["clearly demonstrate","demonstrate that","demonstrate how"], t:"The experiment demonstrated that plants grow toward light.", d:"Can you demonstrate how this machine works?", fm:["demonstrat"] },
+  { w:"subsequent", p:"adj", s:"SUB-se-kwent", k:"그 이후의, 다음의", c:["subsequent studies","in subsequent years","subsequently"], t:"Subsequent studies found very similar results.", d:"The first class was hard, but subsequent ones got easier.", fm:["subsequent"] },
+  { w:"undergo", p:"verb", s:"un-der-GO", k:"(변화 등을) 겪다", c:["undergo changes","undergo surgery","undergo a transformation"], t:"The city underwent major changes in the 1990s.", d:"My neighborhood is undergoing a lot of construction right now.", fm:["undergo","underwent","undergone","undergoing"] },
+  { w:"enhance", p:"verb", s:"en-HANCE", k:"향상시키다, 높이다", c:["enhance performance","enhance the flavor","greatly enhance"], t:"Some studies suggest music may enhance focus during simple tasks.", d:"A little lemon really enhances the flavor.", fm:["enhanc"] },
+  { w:"emerge", p:"verb", s:"e-MERJ", k:"나타나다, 드러나다", c:["emerge from","a pattern emerged","new problems emerged"], t:"A clear pattern emerged from the data.", d:"A few problems emerged after we moved into the new apartment.", fm:["emerg"] },
+  { w:"sustainable", p:"adj", s:"sus-TAIN-a-ble", k:"지속 가능한", c:["sustainable energy","a sustainable lifestyle","not sustainable"], t:"Cities are investing in sustainable energy like solar power.", d:"Studying five hours a day just isn't sustainable for me.", fm:["sustain"] },
+  { w:"inevitable", p:"adj", s:"in-EV-i-ta-ble", k:"피할 수 없는, 필연적인", c:["it's inevitable that","almost inevitable","inevitably"], t:"Some change in the global climate is now inevitable.", d:"Mistakes are inevitable when you learn a language.", fm:["inevitabl"] },
+  { w:"drawback", p:"noun", s:"DRAW-back", k:"단점, 문제점", c:["the main drawback of","a major drawback","benefits and drawbacks"], t:"One drawback of solar power is that it depends on the weather.", d:"The only drawback of this apartment is the noise.", fm:["drawback"] },
+  { w:"comprehensive", p:"adj", s:"com-pre-HEN-sive", k:"포괄적인, 종합적인", c:["a comprehensive study","a comprehensive guide","comprehensive review"], t:"The report is a comprehensive study of ocean pollution.", d:"I found a comprehensive guide to traveling in Japan.", fm:["comprehensive"] },
+  { w:"exceed", p:"verb", s:"ex-SEED", k:"넘다, 초과하다", c:["exceed expectations","exceed the limit","far exceed"], t:"In some regions, summer temperatures now exceed 40 degrees.", d:"The trip exceeded all my expectations!", fm:["exceed"] },
+  { w:"predominantly", p:"adv", s:"pre-DOM-i-nant-ly", k:"대부분, 주로", c:["predominantly in","predominantly female","predominant"], t:"The species lives predominantly in tropical forests.", d:"My friends are predominantly night owls.", fm:["predominan"] },
+  { w:"compelling", p:"adj", s:"com-PEL-ing", k:"설득력 있는; 흥미진진한", c:["a compelling argument","compelling evidence","a compelling story"], t:"The author makes a compelling argument for renewable energy.", d:"That show has such a compelling story. I watched it all night!", fm:["compelling"] }
+ ]
+];
+
+/* Speaking questions by level: q question, tag, m model answer */
+const QUESTIONS = [
+ [ // Lv1
+  { tag:"Daily life", q:"What do you usually do on weekends?", m:"On weekends, I usually sleep a little late. Then I meet my friends for lunch. In the afternoon, I like to walk in the park near my home. It helps me relax after a busy week. On Sunday night, I prepare for the next week." },
+  { tag:"Daily life", q:"Tell me about your favorite food and why you like it.", m:"My favorite food is kimchi stew. My mom makes it very well. I like it because it's warm and a little spicy. When I feel tired or cold, a bowl of kimchi stew makes me feel better. It reminds me of home." },
+  { tag:"Interview style", q:"Do you prefer mornings or evenings? Why?", m:"I prefer mornings. My mind is clear and I have more energy. For example, I study English for thirty minutes every morning before work. In the evening, I'm usually too tired to focus, so mornings work better for me." },
+  { tag:"Daily life", q:"Describe a place in your city that you like.", m:"I really like a small café near my office. It's quiet and comfortable, and the coffee is great. I often go there after work to read or study. The staff are very friendly, so I feel relaxed there." },
+  { tag:"Interview style", q:"What is one healthy habit you have?", m:"One healthy habit I have is walking every day. I try to walk for thirty minutes after dinner. It helps me sleep better and reduces stress. Sometimes I listen to English podcasts while I walk, so I improve my English too." },
+  { tag:"Interview style", q:"Do you like to study alone or with friends?", m:"I prefer studying alone. When I study with friends, we usually start talking and lose time. Alone, I can focus and go at my own speed. But before a big exam, I sometimes meet friends to check difficult questions." }
+ ],
+ [ // Lv2
+  { tag:"Daily life", q:"How do you usually deal with stress?", m:"When I feel stressed, I usually go for a run or take a long walk. Exercise really helps me clear my mind. For example, last month I had a lot of work, and running three times a week helped me stay calm. I also try to talk to my friends, because sharing my problems makes me feel lighter." },
+  { tag:"Interview style", q:"Do you prefer shopping online or in stores? Why?", m:"I mostly prefer shopping online because it's convenient and saves time. I can compare prices easily, and things arrive at my door. For example, I bought a laptop online last year and saved almost a hundred dollars. However, for clothes I still go to stores, because I want to try them on first." },
+  { tag:"Daily life", q:"Tell me about a skill you want to improve and how you'll do it.", m:"I really want to improve my English speaking. My plan is to practice a little every day instead of studying a lot once a week. For example, I answer one TOEFL question every morning and record myself. I also watch American shows with English subtitles. I think being consistent is the key." },
+  { tag:"Interview style", q:"What is one benefit and one problem of living in a big city?", m:"One big benefit of living in a city is that everything is convenient. There are lots of restaurants, stores, and job opportunities. On the other hand, cities are often crowded and expensive. For example, my rent is really high, and the subway is packed every morning. Still, I think the benefits are bigger for young people." },
+  { tag:"Interview style", q:"How do you use your smartphone to learn new things?", m:"I use my smartphone to learn almost every day. I have a vocabulary app that I use on the bus, and I watch short videos about science and history. For example, last week I learned how bees communicate from a five-minute video. It's a great way to use small pieces of free time." },
+  { tag:"Daily life", q:"Describe a time you had to figure out a difficult problem.", m:"Last year, my laptop suddenly stopped working the night before a big presentation. At first I panicked, but then I tried to figure out the problem step by step. I searched online and found that it was a battery issue. I borrowed my roommate's charger, and it worked. I learned to stay calm under pressure." }
+ ],
+ [ // Lv3
+  { tag:"TOEFL interview", q:"Some people say technology makes us less social. Do you agree?", m:"I partly disagree. It's true that technology can make people less social, for example when friends look at their phones during dinner. But it also helps us stay connected. My best friend moved to Canada two years ago, and we still video-call every weekend. Without technology, we would probably have lost touch. So I think the impact depends on how we use it." },
+  { tag:"TOEFL interview", q:"Should cities spend more money on public transportation or on building new roads?", m:"I believe cities should invest more in public transportation. New roads often just bring more cars and more traffic. Buses and subways can move many people at once, and they reduce pollution. In my city, a new subway line opened last year, and my commute became twenty minutes shorter. Many of my friends even stopped driving to work because of it." },
+  { tag:"TOEFL interview", q:"Is it better to work in a team or alone? Explain with an example.", m:"In my opinion, working in a team is usually better. Team members can share different perspectives, so the final result is more creative. In my marketing class, our group combined three different ideas into one campaign, and we got the highest grade. Also, the work is divided, so each person has less pressure. Teamwork needs good communication, but the benefits are significant." },
+  { tag:"TOEFL interview", q:"How has the way people study changed in the last ten years?", m:"Studying has changed a lot because of technology. Ten years ago, most students relied on paper textbooks and libraries. Now, we use apps, online lectures, and even AI tutors. For instance, I learn new words with a flashcard app for ten minutes every morning. As a result, students can study anywhere, but they also need more self-control to avoid distractions." },
+  { tag:"TOEFL interview", q:"Should young people volunteer in their communities? Why or why not?", m:"Yes, I think young people should volunteer. First, it teaches responsibility and teamwork. Second, it helps them understand people with different lives. In high school, I volunteered at a library, teaching older people how to use smartphones. I learned to be patient and explain things clearly, and those skills still help me at work today." },
+  { tag:"TOEFL interview", q:"What is the most important quality of a good teacher?", m:"I think the most important quality is patience. Students learn at different speeds, and a patient teacher makes them feel comfortable asking questions. My high school English teacher never got upset when we made mistakes. Because of her attitude, I stopped being afraid of speaking English. That had a huge impact on my confidence." }
+ ],
+ [ // Lv4
+  { tag:"TOEFL academic", q:"Some argue that universities should require every student to take a course on climate change. What is your view?", m:"I strongly support this idea. Climate change is a phenomenon that affects every field, from economics to public health, so it isn't just a topic for science majors. A required course would give all graduates a basic understanding of the evidence and the possible solutions. For example, a business student who understands sustainable energy could make better decisions later in their career. Although it adds one more requirement, the long-term benefits clearly exceed the cost." },
+  { tag:"TOEFL academic", q:"Should governments invest more in space exploration or in ocean research?", m:"I would argue that ocean research deserves more investment. Surprisingly, we have mapped the surface of Mars in more detail than our own ocean floor. The ocean regulates the climate and provides food for billions of people, so understanding it has a direct impact on our lives. Space exploration is inspiring, but its benefits are often indirect and long-term. Given limited budgets, the ocean is the more compelling priority." },
+  { tag:"TOEFL academic", q:"Is it better for people to change jobs often or to stay with one company for a long time?", m:"In today's economy, I think changing jobs every few years is generally more beneficial. Each move lets people develop new skills and see their industry from a different perspective. My cousin changed companies three times in eight years, and each time she gained responsibilities and a significant raise. The main drawback is less job security, but for most young workers, the growth opportunities outweigh that risk." },
+  { tag:"TOEFL academic", q:"Some believe artificial intelligence will create more jobs than it destroys. What do you think?", m:"I'm cautiously optimistic. History shows that new technologies usually eliminate some jobs while creating entirely new ones. For example, the internet reduced the number of travel agents, but it created millions of jobs in web design and online marketing. Similarly, AI will probably replace some routine tasks, but it will also create roles we can't imagine yet. The crucial factor is whether education systems help workers adapt quickly." },
+  { tag:"TOEFL academic", q:"Should museums be free for everyone? Explain the benefits and drawbacks.", m:"I believe museums should be free, at least for students and low-income visitors. The biggest benefit is access: culture and history shouldn't depend on how much money you have. When the museums in London became free, the number of visitors increased dramatically. The obvious drawback is funding, since museums need money to maintain their collections. However, governments and private donors can cover these costs, so the benefits clearly outweigh the drawbacks." },
+  { tag:"TOEFL academic", q:"Which has a bigger influence on a person's success: talent or hard work?", m:"While talent certainly helps, I'm convinced that hard work has a bigger influence on long-term success. Talent may give someone an early advantage, but without consistent effort, that advantage disappears. A famous example is Michael Jordan, who was cut from his high school basketball team and responded by practicing harder than anyone else. In my own life, I improved my English not through natural ability, but through daily practice." }
+ ]
+];
+
+/* ================= HELPERS ================= */
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const words = s => (s||"").toLowerCase().replace(/[’]/g,"'").replace(/[^a-z0-9' -]/g," ").split(/[\s-]+/).filter(Boolean);
+const store = {
+  get(k){ try{ return JSON.parse(localStorage.getItem("tpc2_"+k)); }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem("tpc2_"+k, JSON.stringify(v)); }catch(e){} }
+};
+function toast(msg){ const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove("show"), 1800); }
+const pick = a => a[Math.floor(Math.random()*a.length)];
+
+/* ================= VOICE: bright, friendly female ================= */
+const synth = window.speechSynthesis;
+let voices = [], voice = null;
+const BAD = /Fred|Alex|Daniel|Guy|Tom\b|Aaron|Evan|Nathan|Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Wobble|Whisper|Zarvox|Trinoids|Organ|Jester|Superstar|Hysterical|Ralph|Junior|Kathy|Rocko|Grandpa|Grandma|Eddy|Reed|Sandy|Shelley|Flo\b|Good News|Deranged|Pipe|Andrew|Brian|Christopher|Eric|Roger|Steffan|Davis|Tony|Jason|Oliver|Arthur|Gordon|Lee\b|Rishi|Male/i;
+function vScore(v){
+  const n = v.name; let s = 0;
+  if(/en[-_]US/i.test(v.lang)) s += 6; else if(/^en/i.test(v.lang)) s += 2; else return -99;
+  if(/Premium/i.test(n)) s += 30;
+  if(/Enhanced|Natural|Neural|Online/i.test(n)) s += 20;
+  if(/Ava|Zoe|Aria|Jenny|Allison|Nicky|Susan|Michelle|Emma|Ana\b|Joanna|Google US English/i.test(n)) s += 15;
+  if(/Samantha/i.test(n)) s += 4;
+  if(BAD.test(n)) s -= 50;
+  return s;
+}
+function loadVoices(){
+  if(!synth) return;
+  voices = synth.getVoices().filter(v => /^en/i.test(v.lang)).sort((a,b) => vScore(b) - vScore(a));
+  const saved = store.get("voice");
+  voice = voices.find(v => v.name === saved) || voices[0] || null;
+  $("voiceSel").innerHTML = voices.map((v,i) => `<option value="${i}">${esc(v.name)} (${esc(v.lang)})</option>`).join("") || `<option>Default voice</option>`;
+  if(voice) $("voiceSel").value = voices.indexOf(voice);
+}
+if(synth){ loadVoices(); synth.onvoiceschanged = loadVoices; }
+function speak(t, mood){
+  return new Promise(res => {
+    if(!synth || !t){ res(); return; }
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance(t);
+    if(voice){ u.voice = voice; u.lang = voice.lang; } else u.lang = "en-US";
+    // A slightly higher pitch and natural pace sound warmer and happier than the flat default.
+    u.pitch = mood === "cheer" ? 1.2 : 1.12;
+    u.rate = mood === "cheer" ? 1.05 : 0.98;
+    u.onend = u.onerror = () => res();
+    synth.speak(u);
+  });
+}
+$("gear").onclick = () => { const p = $("voicePanel"); p.hidden = !p.hidden; $("gear").setAttribute("aria-expanded", !p.hidden); };
+$("voiceClose").onclick = () => { $("voicePanel").hidden = true; $("gear").setAttribute("aria-expanded", "false"); };
+$("voiceSel").onchange = () => { voice = voices[+$("voiceSel").value] || null; voice && store.set("voice", voice.name); };
+$("voiceTest").onclick = () => speak("Hi there! I'm so happy to practice with you today. You're doing amazing, so let's keep going!", "cheer");
+
+/* ================= CLAUDE ================= */
+const samplePromise = window.claude?.use ? window.claude.use("sample") : Promise.resolve(null);
+async function ask(prompt, tier){
+  const sample = await samplePromise;
+  if(!sample) throw { code: "unavailable" };
+  return sample.json(prompt, { modelTier: tier || "default", cache: false });
+}
+const ERR = {
+  not_granted: "Claude feedback is turned off for this page. Allow it when asked, or use the model answer below.",
+  rate_limited: "Too many requests right now. Wait a minute and try again.",
+  unavailable: "Claude feedback isn't available here. Open this page while signed in to Claude.",
+  session_expired: "Please sign in to Claude again."
+};
+const errMsg = e => ERR[e?.code] || "Something went wrong. Tap the button to try again.";
+const PERSONA = "You are Mia, a warm, bubbly, genuinely happy American English tutor in her twenties. You are always encouraging and positive, like a supportive best friend, and you celebrate every bit of progress. Your student is a Korean adult preparing for the TOEFL iBT who also wants English for daily life.";
+
+/* ================= LEVEL SYSTEM ================= */
+const WORDS_TO_PASS = 10, SPEAK_TO_PASS = 3, SPEAK_AVG = 3;
+let level = Math.min(Math.max(+(store.get("level") ?? 0), 0), LEVELS.length - 1);
+const prog = () => store.get("prog") || {};
+const spk = () => store.get("spk") || {};
+const learnedAt = L => { const p = prog(); return WORDS[L].filter(it => (p[it.w]?.box ?? -1) >= 1).length; };
+const recentScores = L => (spk()[L] || []).slice(-SPEAK_TO_PASS);
+function renderLevel(){
+  const L = LEVELS[level], cls = "lv" + (level + 1);
+  $("levelCard").className = "card level " + cls;
+  $("lvName").textContent = `Lv.${level+1} ${L.name}`;
+  $("lvDesc").textContent = L.ko;
+  $("lvChip").className = "lv " + cls; $("lvChip").textContent = `${L.cefr} · ${L.band}`;
+  const lw = learnedAt(level), rs = recentScores(level);
+  const avg = rs.length ? rs.reduce((a,b) => a + b, 0) / rs.length : 0;
+  $("barW").style.width = Math.min(100, lw / WORDS_TO_PASS * 100) + "%";
+  $("numW").textContent = `${Math.min(lw, WORDS_TO_PASS)}/${WORDS_TO_PASS}`;
+  const spPct = Math.min(1, rs.length / SPEAK_TO_PASS) * Math.min(1, avg / SPEAK_AVG);
+  $("barS").style.width = (spPct * 100) + "%";
+  $("numS").textContent = rs.length ? `avg ${avg.toFixed(1)}/4` : "0/3";
+  const last = level === LEVELS.length - 1;
+  $("lvGoal").textContent = last
+    ? "Top level! Keep reviewing and speaking every day. 최고 레벨이에요! 꾸준히 유지해요."
+    : `Next level: learn ${WORDS_TO_PASS} words + average ${SPEAK_AVG}/4 on your last ${SPEAK_TO_PASS} answers. 다음 레벨 조건: 단어 ${WORDS_TO_PASS}개 + 최근 스피킹 ${SPEAK_TO_PASS}회 평균 ${SPEAK_AVG}점`;
+  const ready = !last && lw >= WORDS_TO_PASS && rs.length >= SPEAK_TO_PASS && avg >= SPEAK_AVG;
+  $("lvUp").hidden = !ready;
+  if(ready) $("lvUpText").textContent = `🎉 Amazing! You're ready for Lv.${level+2} ${LEVELS[level+1].name} (${LEVELS[level+1].cefr})! 다음 레벨로 올라갈 준비가 됐어요!`;
+  $("lvPick").innerHTML = LEVELS.map((l,i) => `<button class="lv${i+1}" data-l="${i}" aria-pressed="${i===level}">Lv.${i+1}<br>${l.cefr}</button>`).join("");
+  $("lvPick").querySelectorAll("button").forEach(b => b.onclick = () => setLevel(+b.dataset.l));
+}
+function setLevel(L, celebrate){
+  level = L; store.set("level", L);
+  renderLevel(); S.i = 0; sRender(); buildQueue(); vRender();
+  if(celebrate) speak(`Woohoo! Welcome to level ${L+1}! I'm so proud of you!`, "cheer");
+}
+$("lvUpBtn").onclick = () => setLevel(Math.min(level + 1, LEVELS.length - 1), true);
+
+/* ================= TABS ================= */
+function tab(which){
+  $("tabS").setAttribute("aria-selected", which === "s");
+  $("tabV").setAttribute("aria-selected", which === "v");
+  $("speak").hidden = which !== "s"; $("words").hidden = which !== "v";
+  synth && synth.cancel();
+  store.set("tab", which);
+}
+$("tabS").onclick = () => tab("s"); $("tabV").onclick = () => tab("v");
+
+/* ================= SPEAKING ================= */
+let S = { i: 0, timer: null, end: 0 };
+const curQ = () => QUESTIONS[level][S.i % QUESTIONS[level].length];
+function sRender(){
+  const it = curQ();
+  $("sLv").className = "lv lv" + (level+1); $("sLv").textContent = `Lv.${level+1} · ${LEVELS[level].cefr}`;
+  $("sTag").textContent = (it.tag.startsWith("TOEFL") ? "🏫 " : "🏠 ") + it.tag;
+  $("sQ").textContent = it.q;
+  $("sAns").value = ""; $("sOut").innerHTML = ""; $("sStats").innerHTML = "";
+  stopTimer(); $("sTimer").textContent = "0:45"; $("sTimer").className = "timer";
+}
+function stopTimer(){ clearInterval(S.timer); S.timer = null; $("sStart").textContent = "▶ Start 45 seconds"; }
+function tick(){
+  const left = Math.ceil((S.end - Date.now())/1000);
+  if(left <= 0){ $("sTimer").textContent = "Time's up"; $("sTimer").className = "timer over"; stopTimer(); return; }
+  $("sTimer").textContent = "0:" + String(left).padStart(2,"0");
+}
+$("sListen").onclick = () => speak(curQ().q);
+$("sNew").onclick = () => { S.i = (S.i + 1) % QUESTIONS[level].length; sRender(); };
+$("sStart").onclick = async () => {
+  if(S.timer){ stopTimer(); $("sTimer").className = "timer"; return; }
+  $("sStart").disabled = true;
+  await speak(curQ().q);
+  $("sStart").disabled = false;
+  S.end = Date.now() + 45000; $("sTimer").className = "timer on";
+  $("sStart").textContent = "■ Stop timer";
+  S.timer = setInterval(tick, 250); tick();
+  $("sAns").focus();
+};
+function stats(t){
+  const w = words(t), n = w.length, goal = LEVELS[level].goal;
+  const fillers = w.filter(x => ["um","uh","er","erm","ah"].includes(x)).length;
+  const links = ["because","example","instance","addition","however","result","so","first","second","finally","although","also","but"].filter(l => w.includes(l)).length;
+  $("sStats").innerHTML = n ? `<span class="chip ${n>=goal?"good":n>=goal*.65?"warn":"bad"}">${n} words · goal ${goal}+</span>
+    <span class="chip ${links>=3?"good":"warn"}">${links} linking words</span>
+    ${fillers ? `<span class="chip bad">${fillers} um/uh</span>` : ""}` : "";
+}
+$("sAns").oninput = () => stats($("sAns").value);
+$("sCheck").onclick = async () => {
+  const it = curQ(), ans = $("sAns").value.trim(), L = LEVELS[level];
+  const nextL = LEVELS[Math.min(level + 1, LEVELS.length - 1)];
+  if(words(ans).length < 5){ $("sOut").innerHTML = `<p class="chip warn">Say at least one full sentence first. 먼저 답을 말해 주세요.</p>`; return; }
+  const btn = $("sCheck"); btn.disabled = true; btn.textContent = "Mia is reading your answer…";
+  $("sOut").innerHTML = "";
+  const prompt = `${PERSONA}
+The student is currently at level ${L.cefr} (${L.name}). Their answer below was spoken aloud and captured by phone dictation, so ignore punctuation and capitalization.
+
+Question: ${it.q}
+Answer: ${ans}
+
+Grade it with the TOEFL speaking rubric from 0 to 4, judging language use and topic development only (you can't hear delivery). Be fair but kind, and grade relative to what a ${L.cefr} learner should aim for.
+
+Reply with only JSON in this shape:
+{"score": 3, "cefr": "B1", "cheer": "1-2 short, bright, natural spoken English sentences praising something SPECIFIC in their answer, the way an excited friend would say it out loud. No emojis.", "summary_ko": "따뜻하고 긍정적인 한국어 총평 1-2문장 (친근한 존댓말, 칭찬 먼저)", "fixes": [{"wrong": "exact phrase from the answer", "right": "corrected phrase", "why_ko": "짧고 쉬운 설명"}], "better": "an upgraded version of THEIR answer that keeps their ideas, written at about ${nextL.cefr} level in natural spoken English, ${L.goal}-${L.goal+25} words", "tip_ko": "다음에 바로 써먹을 팁 하나 (긍정적으로)"}
+Give at most ${level < 2 ? 3 : 4} fixes, the most important first. If there are no errors, fixes is [].`;
+  try{
+    const r = await ask(prompt);
+    const sc = Math.max(0, Math.min(4, +r.score || 0));
+    const all = spk(); (all[level] = all[level] || []).push(sc); store.set("spk", all);
+    $("sOut").innerHTML = `
+      <div class="card" style="padding:14px;gap:10px">
+        <div class="row"><span class="chip ${sc>=3?"good":sc>=2?"warn":"bad"}">Score ${sc} / 4</span>${r.cefr ? `<span class="tag">Sounds like ${esc(r.cefr)}</span>` : ""}</div>
+        ${r.cheer ? `<p class="cheer">“${esc(r.cheer)}”</p>` : ""}
+        <p>${esc(r.summary_ko)}</p>
+        ${(r.fixes||[]).map(f => `<div class="fix"><span><s>${esc(f.wrong)}</s> → <ins>${esc(f.right)}</ins></span><span class="ko">${esc(f.why_ko)}</span></div>`).join("")}
+        <span class="label">Level-up version · read it aloud</span>
+        <p class="better">${esc(r.better)}</p>
+        <div class="two">
+          <button class="btn" id="sHearCheer">😊 Hear Mia</button>
+          <button class="btn" id="sHearBetter">🔊 Better version</button>
+        </div>
+        ${r.tip_ko ? `<p class="ko">💡 ${esc(r.tip_ko)}</p>` : ""}
+      </div>`;
+    $("sHearCheer").onclick = () => speak(r.cheer, "cheer");
+    $("sHearBetter").onclick = () => speak(r.better);
+    if(r.cheer) speak(r.cheer, "cheer");
+    renderLevel();
+  }catch(e){
+    $("sOut").innerHTML = `<div class="card" style="padding:14px;gap:10px">
+      <p class="chip warn">${esc(errMsg(e))}</p>
+      <span class="label">Model answer</span><p class="better">${esc(it.m)}</p>
+      <button class="btn" id="sHearModel">🔊 Listen to model answer</button></div>`;
+    $("sHearModel").onclick = () => speak(it.m);
+  }finally{ btn.disabled = false; btn.textContent = "✨ Get feedback"; }
+};
+
+/* ================= WORDS ================= */
+const DAY = 86400000, STEPS = [1, 3, 7, 14, 30, 60];
+let V = { q: [], cur: null };
+function buildQueue(){
+  const p = prog(), now = Date.now();
+  const due = [];
+  for(let L = 0; L <= level; L++) WORDS[L].forEach(it => { if(p[it.w] && p[it.w].due <= now) due.push(it); });
+  const fresh = WORDS[level].filter(it => !p[it.w]).slice(0, 10);
+  V.q = [...due, ...fresh];
+}
+const levelOf = it => WORDS.findIndex(list => list.includes(it));
+function mark(text, it){
+  const forms = (it.fm || [it.w]).map(f => f.replace(/[^a-zA-Z' ]/g,"")).sort((a,b) => b.length - a.length);
+  return esc(text).replace(new RegExp("(" + forms.join("|") + ")([a-z']*)", "i"), "<mark>$1$2</mark>");
+}
+function vRender(){
+  $("vCount").textContent = `${V.q.length} cards left today`;
+  const it = V.cur = V.q[0];
+  $("vBody").hidden = !it; $("vSay").hidden = !it;
+  $("vInfo").hidden = true; $("vOut").innerHTML = ""; $("vSent").value = "";
+  if(!it){
+    $("vLv").hidden = true;
+    $("vWord").textContent = "All done today 🎉";
+    $("vMeta").textContent = "Come back tomorrow for reviews. 오늘 학습 완료! 내일 복습이 기다려요.";
+    return;
+  }
+  const L = levelOf(it);
+  $("vLv").hidden = false; $("vLv").className = "lv lv" + (L+1); $("vLv").textContent = `Lv.${L+1} · ${LEVELS[L].cefr}`;
+  $("vWord").textContent = it.w;
+  $("vMeta").textContent = it.p + " · " + it.s;
+  $("vT").innerHTML = mark(it.t, it);
+  $("vD").innerHTML = mark(it.d, it);
+  $("vKo").textContent = it.k;
+  $("vColl").innerHTML = "";
+  it.c.forEach(c => { const b = document.createElement("button"); b.className = "coll"; b.textContent = "🔊 " + c; b.onclick = () => speak(c.replace(/…/g, "")); $("vColl").append(b); });
+  $("vNote").textContent = it.n ? "💡 " + it.n : "";
+  $("vShow").hidden = false; $("vGuess").hidden = false;
+}
+function reveal(){ $("vInfo").hidden = false; $("vShow").hidden = true; $("vGuess").hidden = true; }
+$("vSay").onclick = () => speak(V.cur?.w);
+$("vPlayT").onclick = () => speak(V.cur?.t);
+$("vPlayD").onclick = () => speak(V.cur?.d);
+$("vShow").onclick = () => { reveal(); speak(V.cur.c[0].replace(/…/g, "")); };
+$("vCheck").onclick = async () => {
+  const it = V.cur, sent = $("vSent").value.trim();
+  if(words(sent).length < 3){ $("vOut").innerHTML = `<p class="chip warn">Say a full sentence with “${esc(it.w)}” first.</p>`; return; }
+  const btn = $("vCheck"); btn.disabled = true; btn.textContent = "Mia is checking…";
+  const prompt = `${PERSONA}
+They are at level ${LEVELS[level].cefr} and just said this sentence using "${it.w}" (captured by phone dictation, ignore punctuation/capitalization).
+
+Sentence: ${sent}
+
+Reply with only JSON: {"natural": true, "used_word": true, "cheer": "one short, happy spoken English reaction, no emojis", "corrected": "the most natural native version of their sentence", "why_ko": "짧고 다정한 한국어 설명 (좋은 점 먼저, 고칠 점)", "examples": ["one more natural everyday example", "one TOEFL-style example"]}`;
+  try{
+    const r = await ask(prompt, "quick");
+    const ok = r.natural && r.used_word;
+    $("vOut").innerHTML = `<div class="card" style="padding:14px;gap:10px">
+      <span class="chip ${ok ? "good" : "warn"}">${ok ? "Natural ✓" : r.used_word ? "Almost! See the fix" : "The word is missing"}</span>
+      ${r.cheer ? `<p class="cheer">“${esc(r.cheer)}”</p>` : ""}
+      ${ok ? "" : `<p class="better">${esc(r.corrected)}</p>`}
+      <p class="ko">${esc(r.why_ko)}</p>
+      ${(r.examples||[]).map(x => `<p class="ko">• ${esc(x)}</p>`).join("")}
+      <button class="btn" id="vHear">🔊 Listen</button></div>`;
+    $("vHear").onclick = () => speak(ok ? sent : r.corrected);
+    if(r.cheer) speak(r.cheer, "cheer");
+    reveal();
+  }catch(e){
+    $("vOut").innerHTML = `<p class="chip warn">${esc(errMsg(e))}</p>`;
+  }finally{ btn.disabled = false; btn.textContent = "✨ Is it natural?"; }
+};
+function rate(good){
+  const it = V.cur; if(!it) return;
+  const p = prog();
+  const box = good ? Math.min((p[it.w]?.box ?? -1) + 1, STEPS.length - 1) : 0;
+  p[it.w] = { box, due: good ? Date.now() + STEPS[box]*DAY : Date.now() };
+  store.set("prog", p);
+  V.q.shift();
+  if(!good) V.q.splice(Math.min(3, V.q.length), 0, it);
+  synth && synth.cancel();
+  if(good) toast(pick(["Nice! 🎉","Great job! ✨","You got it! 💪","Awesome! 🌟"]));
+  vRender(); renderLevel();
+  window.scrollTo({ top: 0 });
+}
+$("vAgain").onclick = () => rate(false);
+$("vGood").onclick = () => rate(true);
+
+/* ================= START ================= */
+renderLevel(); sRender(); buildQueue(); vRender();
+tab(store.get("tab") === "v" ? "v" : "s");
+</script>
+
+</body></html>
